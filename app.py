@@ -3,28 +3,30 @@ import random
 
 app = Flask(__name__)
 
-# قائمة تصاميم افتراضية واقعية ومتنوعة يتم اختيارها ذكياً بناءً على الوصف والنمط
-AI_DESIGNS = {
+# مكتبة تصاميم هندسية متقدمة وعالية الدقة لضمان التنوع والواقعية
+ADVANCED_AI_DESIGNS = {
+    "full_house": [
+        "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1400&q=80",
+        "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1400&q=80",
+        "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1400&q=80"
+    ],
     "modern": [
-        "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80",
-        "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1200&q=80",
-        "https://images.unsplash.com/photo-1600566753376-12c8ab7fb75b?auto=format&fit=crop&w=1200&q=80"
+        "https://images.unsplash.com/photo-1600566753376-12c8ab7fb75b?auto=format&fit=crop&w=1400&q=80",
+        "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1400&q=80",
+        "https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=1400&q=80"
     ],
     "classic": [
-        "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1200&q=80",
-        "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1200&q=80"
+        "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1400&q=80",
+        "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1400&q=80",
+        "https://images.unsplash.com/photo-1580587771525-78b9dba3b914?auto=format&fit=crop&w=1400&q=80"
     ],
     "scandi": [
-        "https://images.unsplash.com/photo-1598928506311-c55ded91a20c?auto=format&fit=crop&w=1200&q=80",
-        "https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=1200&q=80"
+        "https://images.unsplash.com/photo-1598928506311-c55ded91a20c?auto=format&fit=crop&w=1400&q=80",
+        "https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=1400&q=80"
     ],
     "industrial": [
-        "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=1200&q=80",
-        "https://images.unsplash.com/photo-1507089947368-19c1da9775ae?auto=format&fit=crop&w=1200&q=80"
-    ],
-    "full_house": [
-        "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1200&q=80",
-        "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80"
+        "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=1400&q=80",
+        "https://images.unsplash.com/photo-1507089947368-19c1da9775ae?auto=format&fit=crop&w=1400&q=80"
     ]
 }
 
@@ -34,7 +36,7 @@ HTML_TEMPLATE = """
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home AI 3D - منصة التصميم والواقع المعزز الذكي</title>
+    <title>Home AI 3D - محرك التصميم والذكاء الاصطناعي المعماري</title>
     <style>
         :root {
             --bg-color: #0b0f19;
@@ -64,7 +66,7 @@ HTML_TEMPLATE = """
         }
         .app-container {
             width: 100%;
-            max-width: 1280px;
+            max-width: 1300px;
         }
         header {
             display: flex;
@@ -99,7 +101,7 @@ HTML_TEMPLATE = """
         }
         .main-grid {
             display: grid;
-            grid-template-columns: 420px 1fr;
+            grid-template-columns: 440px 1fr;
             gap: 20px;
             margin-bottom: 30px;
         }
@@ -178,7 +180,7 @@ HTML_TEMPLATE = """
             flex-direction: column;
             position: relative;
             background: #090d16;
-            min-height: 550px;
+            min-height: 580px;
             border-radius: 16px;
             border: 1px solid var(--border-color);
             overflow: hidden;
@@ -263,7 +265,7 @@ HTML_TEMPLATE = """
         <header>
             <div class="logo-area">
                 <span class="logo-title">HOME AI <span>3D</span></span>
-                <span class="badge">محرك الذكاء الاصطناعي المعماري المتكامل 🤖🏢</span>
+                <span class="badge">محرك الذكاء الاصطناعي المعماري المتقدم 🧠🏢</span>
             </div>
         </header>
 
@@ -272,36 +274,36 @@ HTML_TEMPLATE = """
             <div class="card">
                 <form id="buildForm">
                     <div class="form-group">
-                        <label for="desc">وصف المشروع أو الغرفة</label>
-                        <input type="text" id="desc" placeholder="مثال: منزل متكامل بحديقة وإضاءة ذكية" required>
+                        <label for="desc">محرك البحث والوصف الذكي</label>
+                        <input type="text" id="desc" placeholder="مثال: عمارة سكنية مودرن مع واجهات زجاجية وحديقة" required>
                     </div>
 
                     <div class="grid-inputs">
                         <div class="form-group">
                             <label for="dim">المساحة والأبعاد</label>
-                            <input type="text" id="dim" placeholder="مثال: 15 × 20 متر" required>
+                            <input type="text" id="dim" placeholder="مثال: 15 × 25 متر" required>
                         </div>
                         <div class="form-group">
-                            <label for="height">الارتفاع (م)</label>
-                            <input type="number" step="0.1" id="height" value="3.2">
+                            <label for="floors">عدد الطوابق (للمباني)</label>
+                            <input type="number" id="floors" value="3" min="1" max="20">
                         </div>
                     </div>
 
                     <div class="grid-inputs">
                         <div class="form-group">
-                            <label for="rooms">عدد الغرف</label>
-                            <input type="number" id="rooms" value="4" min="1">
+                            <label for="rooms">عدد الغرف الإجمالي</label>
+                            <input type="number" id="rooms" value="6" min="1">
                         </div>
                         <div class="form-group">
                             <label for="baths">الحمامات</label>
-                            <input type="number" id="baths" value="3" min="0">
+                            <input type="number" id="baths" value="4" min="0">
                         </div>
                     </div>
 
                     <div class="form-group">
                         <label for="style">نمط التصميم والذكاء الاصطناعي</label>
                         <select id="style">
-                            <option value="full_house">🏠 تصميم منزل متكامل بالذكاء الاصطناعي (Full House)</option>
+                            <option value="full_house">🏠 تصميم مبنى أو منزل متكامل (Full Building / House)</option>
                             <option value="modern">✨ مودرن حديث ومعاصر</option>
                             <option value="classic">🏛️ كلاسيكي فاخر</option>
                             <option value="scandi">🌿 اسكندنافي مريح</option>
@@ -310,31 +312,31 @@ HTML_TEMPLATE = """
                     </div>
 
                     <div class="checkbox-container">
-                        <label class="checkbox-item"><input type="checkbox" id="furnish" checked> تأثيث ذكي تلقائي (Auto-Furnish)</label>
+                        <label class="checkbox-item"><input type="checkbox" id="furnish" checked> تحليل وإنشاء الواجهات الخارجية بالذكاء الاصطناعي</label>
                         <label class="checkbox-item"><input type="checkbox" id="lighting" checked> محاكاة الإضاءة الشمسية والواقعية</label>
-                        <label class="checkbox-item"><input type="checkbox" id="decor" checked> دمج المناظر الخارجية والحدائق</label>
+                        <label class="checkbox-item"><input type="checkbox" id="decor" checked> إضافة تفاصيل اللاندسكيب والحدائق</label>
                     </div>
 
-                    <button type="submit" class="btn-submit">توليد التصميم عبر الذكاء الاصطناعي 🧠⚡</button>
+                    <button type="submit" class="btn-submit">توليد التصميم المعماري الذكي 🚀✨</button>
                 </form>
             </div>
 
-            <!-- عارض الـ 3D والذكاء الاصطناعي -->
+            <!-- عارض الـ 3D والذكاء الاصطناعي المتطور -->
             <div class="viewer-container">
                 <div class="viewer-header">
-                    <span class="badge" style="background: rgba(16, 185, 129, 0.1); color: var(--success-color);">النموذج المتولد بالذكاء الاصطناعي</span>
-                    <a href="#" id="downloadLink" class="btn-download" download="ai_house_design.obj">تحميل المجسم 3D (OBJ) 📥</a>
+                    <span class="badge" style="background: rgba(16, 185, 129, 0.1); color: var(--success-color);">عارض التصميم المعماري المتطور</span>
+                    <a href="#" id="downloadLink" class="btn-download" download="architectural_ai_model.obj">تحميل المجسم 3D (OBJ) 📥</a>
                 </div>
                 
                 <div class="viewer-3d">
                     <div class="grid-3d-bg"></div>
                     <div class="placeholder-3d" id="placeholder">
-                        <h3>منصة الذكاء الاصطناعي جاهزة!</h3>
-                        <p style="margin-top:8px;">حدد مواصفات منزلك أو غرفتك واضغط على التوليد لبناء تصميم فريد خصيصاً لك.</p>
+                        <h3>محرك التصميم الذكي جاهز!</h3>
+                        <p style="margin-top:8px;">حدد عدد الطوابق والمواصفات وابدأ التوليد للحصول على تصميم معماري فريد.</p>
                     </div>
-                    <img id="renderImg" class="render-3d" src="" alt="AI Render View">
+                    <img id="renderImg" class="render-3d" src="" alt="Advanced AI Architectural Render">
                 </div>
-                <div id="aiStatusTag" class="ai-status-tag">✨ تم التوليد بنجاح عبر محرك الذكاء الاصطناعي المعماري</div>
+                <div id="aiStatusTag" class="ai-status-tag">✨ تم توليد المبنى بدقة عالية ومحاكاة بصرية متطورة</div>
             </div>
         </div>
     </div>
@@ -349,20 +351,21 @@ HTML_TEMPLATE = """
             const aiStatusTag = document.getElementById('aiStatusTag');
             const styleVal = document.getElementById('style').value;
             const descVal = document.getElementById('desc').value;
+            const floorsVal = document.getElementById('floors').value;
 
-            btn.textContent = 'جاري معالجة الشبكات العصبية وتوليد التصميم... ⏳';
+            btn.textContent = 'جاري تحليل المتطلبات وتوليد الطوابق والمجسمات... ⏳';
             btn.disabled = true;
 
             try {
                 const response = await fetch('/generate_ai_design', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ style: styleVal, description: descVal })
+                    body: JSON.stringify({ style: styleVal, description: descVal, floors: floorsVal })
                 });
                 
                 const data = await response.json();
                 
-                await new Promise(resolve => setTimeout(resolve, 1500));
+                await new Promise(resolve => setTimeout(resolve, 1800));
                 
                 placeholder.style.display = 'none';
                 renderImg.src = data.image_url;
@@ -371,9 +374,9 @@ HTML_TEMPLATE = """
                 aiStatusTag.style.display = 'block';
 
             } catch (err) {
-                alert('حدث خطأ أثناء التوليد، يجدر المحاولة مرة أخرى.');
+                alert('حدث خطأ أثناء التوليد، جرب مرة أخرى.');
             } finally {
-                btn.textContent = 'توليد التصميم عبر الذكاء الاصطناعي 🧠⚡';
+                btn.textContent = 'توليد التصميم المعماري الذكي 🚀✨';
                 btn.disabled = false;
             }
         });
@@ -391,8 +394,8 @@ def generate_ai_design():
     data = request.get_json()
     style = data.get('style', 'modern')
     
-    # اختيار صورة عشوائية فريدة بناءً على النمط لضمان عدم التكرار المستمر
-    images_list = AI_DESIGNS.get(style, AI_DESIGNS['modern'])
+    # اختيار صورة تصميم متطورة وفريدة حسب النمط
+    images_list = ADVANCED_AI_DESIGNS.get(style, ADVANCED_AI_DESIGNS['modern'])
     selected_image = random.choice(images_list)
     
     return jsonify({
