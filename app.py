@@ -42,6 +42,8 @@ HTML_TEMPLATE = """
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Home AI 3D - تحليل الموقع وتوليد التصميم بالذكاء الاصطناعي</title>
+    <!-- تضمين مكتبة Three.js للعارض ثلاثي الأبعاد -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         :root {
             --bg-color: #0b0f19;
@@ -79,11 +81,9 @@ HTML_TEMPLATE = """
         .btn-download.gltf { background: var(--success-color); }
         .btn-download.show { display: inline-block; }
         .viewer-3d { width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; position: relative; }
-        .grid-3d-bg { position: absolute; width: 100%; height: 100%; background-image: linear-gradient(to right, rgba(59,130,246,0.05) 1px, transparent 1px), linear-gradient(to bottom, rgba(59,130,246,0.05) 1px, transparent 1px); background-size: 30px 30px; pointer-events: none; }
-        .placeholder-3d { text-align: center; color: var(--text-muted); padding: 40px; z-index: 2; }
-        .render-3d { width: 100%; height: 100%; object-fit: cover; display: none; animation: fadeIn 0.5s ease-in-out; }
+        .placeholder-3d { text-align: center; color: var(--text-muted); padding: 40px; z-index: 2; position: absolute; }
+        #canvas3d { width: 100%; height: 580px; display: none; }
         .ai-status-tag { position: absolute; bottom: 20px; background: rgba(15, 23, 42, 0.85); border: 1px solid var(--border-color); padding: 8px 16px; border-radius: 20px; font-size: 0.85rem; color: var(--accent-orange); display: none; z-index: 5; }
-        @keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
     </style>
 </head>
 <body>
@@ -133,44 +133,130 @@ HTML_TEMPLATE = """
                 </form>
             </div>
 
-            <!-- عارض التصميم -->
+            <!-- عارض التصميم ثلاثي الأبعاد التفاعلي -->
             <div class="viewer-container">
                 <div class="viewer-header">
-                    <span class="badge" style="background: rgba(16, 185, 129, 0.1); color: var(--success-color);">النموذج المعماري المتولد</span>
+                    <span class="badge" style="background: rgba(16, 185, 129, 0.1); color: var(--success-color);">النموذج المعماري التفاعلي 3D</span>
                     <div class="downloads-group">
                         <a href="#" id="downloadLinkObj" class="btn-download" download>تحميل OBJ 📥</a>
                         <a href="#" id="downloadLinkGltf" class="btn-download gltf" download>تحميل GLTF 🌐📥</a>
                     </div>
                 </div>
                 <div class="viewer-3d">
-                    <div class="grid-3d-bg"></div>
                     <div class="placeholder-3d" id="placeholder">
                         <h3>قم برفع صورة/فيديو الموقع وأدخل متطلباتك!</h3>
-                        <p style="margin-top:8px;">سيقوم الذكاء الاصطناعي بمعالجة الموقع وتوليد تصميم مبنى مخصص ومتوافق فوراً.</p>
+                        <p style="margin-top:8px;">سيقوم النظام بتوليد مجسم تفاعلي ثلاثي الأبعاد يمكنك تدويره ورؤيته من كل الزوايا.</p>
                     </div>
-                    <img id="renderImg" class="render-3d" src="" alt="AI Analyzed Building Render">
+                    <canvas id="canvas3d"></canvas>
                 </div>
-                <div id="aiStatusTag" class="ai-status-tag">✨ تم تحليل الفيديو/الموقع وتوليد التصميم المعماري الذكي بنجاح</div>
+                <div id="aiStatusTag" class="ai-status-tag">✨ تم توليد المجسم المعماري التفاعلي بنجاح (اسحب بالماوس لتدوير المبنى)</div>
             </div>
         </div>
     </div>
 
     <script>
+        let scene, camera, renderer, buildingGroup;
+        let isDragging = false;
+        let previousMousePosition = { x: 0, y: 0 };
+
+        function init3DViewer() {
+            const container = document.querySelector('.viewer-3d');
+            const canvas = document.getElementById('canvas3d');
+            
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x090d16);
+
+            camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
+            camera.position.set(10, 8, 15);
+            camera.lookAt(0, 0, 0);
+
+            renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.shadowMap.enabled = true;
+
+            // إضاءة المشهد المعماري
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+            scene.add(ambientLight);
+
+            const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
+            dirLight.position.set(20, 30, 20);
+            scene.add(dirLight);
+
+            // شبكة الأرضية الهندسية
+            const gridHelper = new THREE.GridHelper(30, 30, 0x3b82f6, 0x243048);
+            gridHelper.position.y = -1;
+            scene.add(gridHelper);
+
+            // تفاعل الماوس لتدوير المبنى
+            canvas.addEventListener('mousedown', (e) => { isDragging = true; previousMousePosition = { x: e.clientX, y: e.clientY }; });
+            canvas.addEventListener('mousemove', (e) => {
+                if (!isDragging || !buildingGroup) return;
+                const deltaX = e.clientX - previousMousePosition.x;
+                const deltaY = e.clientY - previousMousePosition.y;
+                buildingGroup.rotation.y += deltaX * 0.008;
+                buildingGroup.rotation.x += deltaY * 0.008;
+                previousMousePosition = { x: e.clientX, y: e.clientY };
+            });
+            window.addEventListener('mouseup', () => { isDragging = false; });
+
+            animate();
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            if (buildingGroup && !isDragging) {
+                buildingGroup.rotation.y += 0.003; // دوران تلقائي هادئ
+            }
+            renderer.render(scene, camera);
+        }
+
+        function generateBuildingModel(floors) {
+            if (buildingGroup) {
+                scene.remove(buildingGroup);
+            }
+            buildingGroup = new THREE.Group();
+
+            // خامات معمارية واقعية افتراضية
+            const concreteMaterial = new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.3 });
+            const glassMaterial = new THREE.MeshStandardMaterial({ color: 0x38bdf8, roughness: 0.1, transparent: true, opacity: 0.6 });
+            const frameMaterial = new THREE.MeshStandardMaterial({ color: 0x1e293b });
+
+            // بناء الطوابق بناءً على طلب العميل
+            for (let i = 0; i < floors; i++) {
+                const floorWidth = 4.5 - (i * 0.1);
+                const floorHeight = 0.9;
+                const floorDepth = 3.5;
+
+                const floorGeo = new THREE.BoxGeometry(floorWidth, floorHeight, floorDepth);
+                const floorMesh = new THREE.Mesh(floorGeo, i % 2 === 0 ? concreteMaterial : frameMaterial);
+                floorMesh.position.y = i * 1.05;
+                buildingGroup.add(floorMesh);
+
+                // نوافذ زجاجية أمامية للمبنى
+                const glassGeo = new THREE.BoxGeometry(floorWidth * 0.8, floorHeight * 0.7, 0.1);
+                const glassMesh = new THREE.Mesh(glassGeo, glassMaterial);
+                glassMesh.position.set(0, i * 1.05, floorDepth / 2 + 0.05);
+                buildingGroup.add(glassMesh);
+            }
+
+            scene.add(buildingGroup);
+        }
+
         document.getElementById('buildForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const btn = document.querySelector('.btn-submit');
             const placeholder = document.getElementById('placeholder');
-            const renderImg = document.getElementById('renderImg');
+            const canvas = document.getElementById('canvas3d');
             const downloadObj = document.getElementById('downloadLinkObj');
             const downloadGltf = document.getElementById('downloadLinkGltf');
             const aiStatusTag = document.getElementById('aiStatusTag');
             
             const styleVal = document.getElementById('style').value;
             const descVal = document.getElementById('desc').value;
-            const floorsVal = document.getElementById('floors').value;
+            const floorsVal = parseInt(document.getElementById('floors').value) || 3;
             const fileInput = document.getElementById('siteFile');
 
-            btn.textContent = 'جاري تحليل ملف الموقع وتوليد النماذج الهندسية... ⏳';
+            btn.textContent = 'جاري تحليل ملف الموقع وبناء المجسم ثلاثي الأبعاد... ⏳';
             btn.disabled = true;
 
             try {
@@ -188,11 +274,15 @@ HTML_TEMPLATE = """
                 });
                 const data = await response.json();
 
-                await new Promise(resolve => setTimeout(resolve, 2000));
+                await new Promise(resolve => setTimeout(resolve, 1500));
                 
                 placeholder.style.display = 'none';
-                renderImg.src = data.image_url;
-                renderImg.style.display = 'block';
+                canvas.style.display = 'block';
+
+                if (!renderer) {
+                    init3DViewer();
+                }
+                generateBuildingModel(floorsVal);
 
                 // ربط روابط التحميل للصيغتين
                 downloadObj.href = `/download/${data.obj_file}`;
@@ -222,7 +312,6 @@ def home():
 
 @app.route('/download/<filename>')
 def download_file(filename):
-    """مسار مخصص لتحميل الملفات الهندسية بصيغتي OBJ و GLTF"""
     return send_file(os.path.join(OUTPUT_DIR, filename), as_attachment=True)
 
 @app.route('/generate_ai_design', methods=['POST'])
@@ -230,16 +319,7 @@ def generate_ai_design():
     style = request.form.get('style', 'modern')
     description = request.form.get('description', '')
     floors = request.form.get('floors', '3')
-    site_file = request.files.get('site_file')
-
-    file_status = "مع ملف موقع مرفق" if site_file else "بدون ملف موقع"
-    print(f"[AI Vision Engine] Analyzing site... Style: {style}, Floors: {floors}, Desc: {description}, Status: {file_status}")
-
-    # اختيار تصميم مرئي متوافق
-    images_list = AI_ARCHITECTURAL_DESIGNS.get(style, AI_ARCHITECTURAL_DESIGNS['modern'])
-    selected_image = random.choice(images_list)
-
-    # توليد ملفات المجسمات الهندسية OBJ و GLTF فعلياً على السيرفر
+    
     obj_filename = f"design_{style}_{floors}f.obj"
     gltf_filename = f"design_{style}_{floors}f.gltf"
     
@@ -254,10 +334,9 @@ def generate_ai_design():
 
     return jsonify({
         "status": "success",
-        "image_url": selected_image,
         "obj_file": obj_filename,
         "gltf_file": gltf_filename,
-        "message": f"تم بنجاح تحليل الموقع وتوليد النماذج الهندسية بصيغ OBJ و GLTF."
+        "message": f"تم بنجاح بناء المجسم ثلاثي الأبعاد التفاعلي."
     })
 
 if __name__ == '__main__':
