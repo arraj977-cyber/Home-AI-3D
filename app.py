@@ -59,7 +59,7 @@ HTML_TEMPLATE = """
         .btn-toggle-rotate.show { display: inline-block; }
         .viewer-3d { width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; position: relative; }
         .placeholder-3d { text-align: center; color: var(--text-muted); padding: 40px; z-index: 2; position: absolute; }
-        #canvas3d { width: 100%; height: 650px; display: none; }
+        #canvas3d { width: 100%; height: 650px; display: none; cursor: crosshair; }
         .ai-status-tag { position: absolute; bottom: 20px; background: rgba(15, 23, 42, 0.85); border: 1px solid var(--border-color); padding: 8px 16px; border-radius: 20px; font-size: 0.85rem; color: var(--accent-orange); display: none; z-index: 5; }
         
         .history-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
@@ -172,7 +172,7 @@ HTML_TEMPLATE = """
                     </div>
                     <canvas id="canvas3d"></canvas>
                 </div>
-                <div id="aiStatusTag" class="ai-status-tag">✨ تم تطبيق عدد الشقق وارتفاع السقف وتوليد النموذج الهندسي بنجاح</div>
+                <div id="aiStatusTag" class="ai-status-tag">✨ انقر على أي جزء من المبنى لتعديله أو استخدم عجلة الماوس للتقريب والابعاد (Zoom)</div>
             </div>
         </div>
     </div>
@@ -183,6 +183,8 @@ HTML_TEMPLATE = """
         let isRotating = true;
         let previousMousePosition = { x: 0, y: 0 };
         let projectHistory = [];
+        let raycaster = new THREE.Raycaster();
+        let mouse = new THREE.Vector2();
 
         function toggleRotation() {
             isRotating = !isRotating;
@@ -223,6 +225,7 @@ HTML_TEMPLATE = """
             gridHelper.position.y = -1;
             scene.add(gridHelper);
 
+            // تدوير المجسم بالماوس
             canvas.addEventListener('mousedown', (e) => { isDragging = true; previousMousePosition = { x: e.clientX, y: e.clientY }; });
             canvas.addEventListener('mousemove', (e) => {
                 if (!isDragging || !buildingGroup) return;
@@ -233,6 +236,30 @@ HTML_TEMPLATE = """
                 previousMousePosition = { x: e.clientX, y: e.clientY };
             });
             window.addEventListener('mouseup', () => { isDragging = false; });
+
+            // ميزة تكبير وتصغير شاشة المجسم (Zoom In/Out) عبر عجلة الماوس
+            canvas.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                camera.position.z += e.deltaY * 0.03;
+                camera.position.z = Math.max(5, Math.min(50, camera.position.z));
+            }, { passive: false });
+
+            // ميزة التعديل والنقر المباشر على أجزاء المجسم (Interactive Editing)
+            canvas.addEventListener('click', (e) => {
+                const rect = canvas.getBoundingClientRect();
+                mouse.x = ((e.clientX - rect.left) / canvas.clientWidth) * 2 - 1;
+                mouse.y = -((e.clientY - rect.top) / canvas.clientHeight) * 2 + 1;
+
+                raycaster.setFromCamera(mouse, camera);
+                if (buildingGroup) {
+                    const intersects = raycaster.intersectObjects(buildingGroup.children, true);
+                    if (intersects.length > 0) {
+                        const hitMesh = intersects[0].object;
+                        // تغيير لون العنصر عند النقر لتأكيد التعديل الهندسي
+                        hitMesh.material.color.setHex(Math.random() * 0xffffff);
+                    }
+                }
+            });
 
             document.getElementById('sunAngle').addEventListener('input', (e) => {
                 const angle = (e.target.value * Math.PI) / 180;
@@ -281,12 +308,12 @@ HTML_TEMPLATE = """
 
             for (let i = 0; i < floors; i++) {
                 const slabGeo = new THREE.BoxGeometry(widthScale, 0.15, depthScale);
-                const slab = new THREE.Mesh(slabGeo, concreteMat);
+                const slab = new THREE.Mesh(slabGeo, concreteMat.clone());
                 slab.position.y = i * hUnit;
                 buildingGroup.add(slab);
 
                 const floorBodyGeo = new THREE.BoxGeometry(widthScale * 0.92, hUnit * 0.75, depthScale * 0.92);
-                const floorBody = new THREE.Mesh(floorBodyGeo, partitionMat);
+                const floorBody = new THREE.Mesh(floorBodyGeo, partitionMat.clone());
                 floorBody.position.y = i * hUnit + (hUnit * 0.4);
                 buildingGroup.add(floorBody);
 
@@ -297,12 +324,12 @@ HTML_TEMPLATE = """
                     const xOffset = - (widthScale * 0.85 / 2) + (segmentWidth * a) + (segmentWidth / 2);
 
                     const glassGeo = new THREE.BoxGeometry(segmentWidth * 0.85, hUnit * 0.55, 0.08);
-                    const frontGlass = new THREE.Mesh(glassGeo, glassMat);
+                    const frontGlass = new THREE.Mesh(glassGeo, glassMat.clone());
                     frontGlass.position.set(xOffset, i * hUnit + (hUnit * 0.4), depthScale / 2 + 0.04);
                     buildingGroup.add(frontGlass);
 
                     const balconyGeo = new THREE.BoxGeometry(segmentWidth * 0.9, 0.08, 0.6);
-                    const balcony = new THREE.Mesh(balconyGeo, balconyMat);
+                    const balcony = new THREE.Mesh(balconyGeo, balconyMat.clone());
                     balcony.position.set(xOffset, i * hUnit + (hUnit * 0.18), depthScale / 2 + 0.3);
                     buildingGroup.add(balcony);
                 }
