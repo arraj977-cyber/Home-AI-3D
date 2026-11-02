@@ -223,7 +223,6 @@ HTML_TEMPLATE = """
             renderer.render(scene, camera);
         }
 
-        // رسم مبنى تفصيلي يعكس ارتفاع السقف وعدد الشقق (تقسيم الواجهة والشقق)
         function generateDetailedBuilding(floors, dimensionsText, apartments, ceilingHeight) {
             if (buildingGroup) {
                 scene.remove(buildingGroup);
@@ -245,7 +244,7 @@ HTML_TEMPLATE = """
             }
 
             const scaleH = parseFloat(ceilingHeight) || 3.2;
-            const hUnit = scaleH * 0.3; // مقاس الطابق في العارض ثلاثي الأبعاد
+            const hUnit = scaleH * 0.3;
 
             const concreteMat = new THREE.MeshStandardMaterial({ color: 0xcbd5e1, roughness: 0.2 });
             const glassMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, roughness: 0.1, transparent: true, opacity: 0.55 });
@@ -253,32 +252,27 @@ HTML_TEMPLATE = """
             const balconyMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.4 });
 
             for (let i = 0; i < floors; i++) {
-                // بلاطة الطابق
                 const slabGeo = new THREE.BoxGeometry(widthScale, 0.15, depthScale);
                 const slab = new THREE.Mesh(slabGeo, concreteMat);
                 slab.position.y = i * hUnit;
                 buildingGroup.add(slab);
 
-                // هيكل الطابق الداخلي الجدري
                 const floorBodyGeo = new THREE.BoxGeometry(widthScale * 0.92, hUnit * 0.75, depthScale * 0.92);
                 const floorBody = new THREE.Mesh(floorBodyGeo, partitionMat);
                 floorBody.position.y = i * hUnit + (hUnit * 0.4);
                 buildingGroup.add(floorBody);
 
-                // تقسيمات الشقق والواجهات الزجاجية بناءً على عدد الشقق لكل طابق
                 const apptsCount = parseInt(apartments) || 2;
                 const segmentWidth = (widthScale * 0.85) / apptsCount;
 
                 for (let a = 0; a < apptsCount; a++) {
                     const xOffset = - (widthScale * 0.85 / 2) + (segmentWidth * a) + (segmentWidth / 2);
 
-                    // واجهة زجاجية لكل شقة
                     const glassGeo = new THREE.BoxGeometry(segmentWidth * 0.85, hUnit * 0.55, 0.08);
                     const frontGlass = new THREE.Mesh(glassGeo, glassMat);
                     frontGlass.position.set(xOffset, i * hUnit + (hUnit * 0.4), depthScale / 2 + 0.04);
                     buildingGroup.add(frontGlass);
 
-                    // بلكونة لكل شقة
                     const balconyGeo = new THREE.BoxGeometry(segmentWidth * 0.9, 0.08, 0.6);
                     const balcony = new THREE.Mesh(balconyGeo, balconyMat);
                     balcony.position.set(xOffset, i * hUnit + (hUnit * 0.18), depthScale / 2 + 0.3);
@@ -420,7 +414,6 @@ def generate_ai_design():
     with open(gltf_path, "w") as f:
         f.write(f'{{\n  "asset": {{\n    "generator": "Home AI 3D Engine",\n    "version": "2.0"\n  }},\n  "metadata": {{\n    "apartments_per_floor": {apartments},\n    "ceiling_height": {ceiling_height}\n  }}\n}}')
 
-    # مسقط أوتوكاد يضم بيانات الشقق والارتفاعات
     with open(dxf_path, "w") as f:
         f.write(f"0\nSECTION\n2\nHEADER\n0\nENDSEC\n0\nSECTION\n2\nTABLES\n0\nENDSEC\n0\nSECTION\n2\nENTITIES\n")
         f.write(f"0\nTEXT\n8\nARCH_DATA\n10\n0.0\n20\n0.0\n40\n1.2\n1\nHome AI Plan - Dim: {dimensions} | Floors: {floors} | Apt/Floor: {apartments} | Height: {ceiling_height}m\n")
