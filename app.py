@@ -54,8 +54,8 @@ HTML_TEMPLATE = """
         .btn-download.gltf { background: var(--success-color); }
         .btn-download.dxf { background: var(--dxf-color); }
         .btn-download.show { display: inline-block; }
-        .btn-toggle-rotate { background: var(--accent-orange); color: white; border: none; padding: 6px 14px; border-radius: 6px; font-weight: bold; font-size: 0.8rem; cursor: pointer; box-shadow: 0 4px 10px rgba(249, 115, 22, 0.3); transition: 0.2s; }
-        .btn-toggle-rotate:hover { opacity: 0.9; }
+        .btn-toggle-rotate { background: var(--accent-orange); color: white; border: none; padding: 6px 14px; border-radius: 6px; font-weight: bold; font-size: 0.8rem; cursor: pointer; box-shadow: 0 4px 10px rgba(249, 115, 22, 0.3); transition: 0.2s; display: none; }
+        .btn-toggle-rotate.show { display: inline-block; }
         .viewer-3d { width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; position: relative; }
         .placeholder-3d { text-align: center; color: var(--text-muted); padding: 40px; z-index: 2; position: absolute; }
         #canvas3d { width: 100%; height: 650px; display: none; }
@@ -168,7 +168,7 @@ HTML_TEMPLATE = """
     <script>
         let scene, camera, renderer, buildingGroup, dirLight;
         let isDragging = false;
-        let isRotating = true; // حالة تفعيل أو إيقاف الحركة التلقائية
+        let isRotating = true;
         let previousMousePosition = { x: 0, y: 0 };
         let projectHistory = [];
 
@@ -331,6 +331,7 @@ HTML_TEMPLATE = """
             const downloadObj = document.getElementById('downloadLinkObj');
             const downloadGltf = document.getElementById('downloadLinkGltf');
             const downloadDxf = document.getElementById('downloadLinkDxf');
+            const toggleRotateBtn = document.getElementById('toggleRotateBtn');
             const aiStatusTag = document.getElementById('aiStatusTag');
             
             const styleVal = document.getElementById('style').value;
@@ -373,6 +374,7 @@ HTML_TEMPLATE = """
                 generateDetailedBuilding(floorsVal, dimVal, apartmentsVal, ceilingHeightVal);
                 addToHistory(descVal, dimVal, floorsVal, apartmentsVal, ceilingHeightVal, styleVal);
 
+                // إظهار أزرار التحميل وزر التحكم بالحركة فور التوليد
                 downloadObj.href = `/download/${data.obj_file}`;
                 downloadObj.download = data.obj_file;
                 downloadObj.className = 'btn-download show';
@@ -384,6 +386,8 @@ HTML_TEMPLATE = """
                 downloadDxf.href = `/download/${data.dxf_file}`;
                 downloadDxf.download = data.dxf_file;
                 downloadDxf.className = 'btn-download dxf show';
+
+                toggleRotateBtn.className = 'btn-toggle-rotate show';
 
                 aiStatusTag.style.display = 'block';
             } catch (err) {
