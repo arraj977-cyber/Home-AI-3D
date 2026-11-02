@@ -403,3 +403,34 @@ def generate_ai_design():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
+import os
+from flask import Flask, render_template, request, send_file, jsonify
+
+app = Flask(__name__)
+
+# مجلد تخزين النماذج المولدة
+OUTPUT_DIR = "generated_models"
+os.makedirs(OUTPUT_DIR, exist_ok=True)
+
+@app.route('/download/<filename>')
+def download_file(filename):
+    """مسار مخصص لتحميل الملفات الهندسية (OBJ أو GLTF)"""
+    return send_file(os.path.join(OUTPUT_DIR, filename), as_attachment=True)
+
+# يمكنك دمج هذه الجزئية داخل دالة التوليد الرئيسية لديك (عند ضغط زر التحليل)
+def save_generated_models(style, floors):
+    obj_filename = f"design_{style}_{floors}f.obj"
+    gltf_filename = f"design_{style}_{floors}f.gltf"
+    
+    obj_path = os.path.join(OUTPUT_DIR, obj_filename)
+    gltf_path = os.path.join(OUTPUT_DIR, gltf_filename)
+    
+    # كتابة ملف OBJ افتراضي (استبدله بناتج الذكاء الاصطناعي الخاص بك)
+    with open(obj_path, "w") as f:
+        f.write("# Home AI 3D - OBJ Export\n")
+        
+    # كتابة ملف GLTF متوافق مع العارض ثلاثي الأبعاد والخامات
+    with open(gltf_path, "w") as f:
+        f.write('{\n  "asset": {\n    "generator": "Home AI 3D Engine",\n    "version": "2.0"\n  }\n}')
+        
+    return obj_filename, gltf_filename
