@@ -49,11 +49,13 @@ HTML_TEMPLATE = """
         .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(59, 130, 246, 0.6); }
         .viewer-container { display: flex; flex-direction: column; position: relative; background: #090d16; min-height: 650px; border-radius: 16px; border: 1px solid var(--border-color); overflow: hidden; justify-content: center; align-items: center; }
         .viewer-header { position: absolute; top: 20px; left: 20px; right: 20px; display: flex; justify-content: space-between; align-items: center; z-index: 10; flex-wrap: wrap; gap: 10px; }
-        .downloads-group { display: flex; gap: 8px; flex-wrap: wrap; }
+        .downloads-group { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
         .btn-download { background: var(--primary-color); color: white; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 0.8rem; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3); display: none; }
         .btn-download.gltf { background: var(--success-color); }
         .btn-download.dxf { background: var(--dxf-color); }
         .btn-download.show { display: inline-block; }
+        .btn-toggle-rotate { background: var(--accent-orange); color: white; border: none; padding: 6px 14px; border-radius: 6px; font-weight: bold; font-size: 0.8rem; cursor: pointer; box-shadow: 0 4px 10px rgba(249, 115, 22, 0.3); transition: 0.2s; }
+        .btn-toggle-rotate:hover { opacity: 0.9; }
         .viewer-3d { width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; position: relative; }
         .placeholder-3d { text-align: center; color: var(--text-muted); padding: 40px; z-index: 2; position: absolute; }
         #canvas3d { width: 100%; height: 650px; display: none; }
@@ -145,6 +147,7 @@ HTML_TEMPLATE = """
                 <div class="viewer-header">
                     <span class="badge" style="background: rgba(16, 185, 129, 0.1); color: var(--success-color);">عارض التصميم المعماري ثلاثي الأبعاد</span>
                     <div class="downloads-group">
+                        <button type="button" id="toggleRotateBtn" class="btn-toggle-rotate" onclick="toggleRotation()">إيقاف الحركة ⏸️</button>
                         <a href="#" id="downloadLinkObj" class="btn-download" download>تحميل OBJ 📥</a>
                         <a href="#" id="downloadLinkGltf" class="btn-download gltf" download>تحميل GLTF 🌐</a>
                         <a href="#" id="downloadLinkDxf" class="btn-download dxf" download>تحميل أوتوكاد DXF 📐📥</a>
@@ -165,8 +168,21 @@ HTML_TEMPLATE = """
     <script>
         let scene, camera, renderer, buildingGroup, dirLight;
         let isDragging = false;
+        let isRotating = true; // حالة تفعيل أو إيقاف الحركة التلقائية
         let previousMousePosition = { x: 0, y: 0 };
         let projectHistory = [];
+
+        function toggleRotation() {
+            isRotating = !isRotating;
+            const btn = document.getElementById('toggleRotateBtn');
+            if (isRotating) {
+                btn.textContent = 'إيقاف الحركة ⏸️';
+                btn.style.background = 'var(--accent-orange)';
+            } else {
+                btn.textContent = 'تحريك المجسم 🔄';
+                btn.style.background = 'var(--primary-color)';
+            }
+        }
 
         function init3DViewer() {
             const container = document.querySelector('.viewer-3d');
@@ -217,7 +233,7 @@ HTML_TEMPLATE = """
 
         function animate() {
             requestAnimationFrame(animate);
-            if (buildingGroup && !isDragging) {
+            if (buildingGroup && isRotating && !isDragging) {
                 buildingGroup.rotation.y += 0.002;
             }
             renderer.render(scene, camera);
