@@ -52,7 +52,6 @@ HTML_TEMPLATE = """
         .viewer-container { display: flex; flex-direction: column; position: relative; background: #090d16; min-height: 680px; border-radius: 16px; border: 1px solid var(--border-color); overflow: hidden; justify-content: center; align-items: center; }
         .viewer-header { position: absolute; top: 15px; left: 20px; right: 20px; display: flex; justify-content: space-between; align-items: center; z-index: 10; flex-wrap: wrap; gap: 10px; }
         
-        /* شريط أدوات الرسم شبيه بالأوتوكاد */
         .cad-toolbar { display: flex; gap: 6px; background: rgba(15, 23, 42, 0.95); padding: 6px 12px; border-radius: 8px; border: 1px solid var(--border-color); }
         .cad-btn { background: var(--card-bg); color: var(--text-color); border: 1px solid var(--border-color); padding: 6px 10px; border-radius: 6px; font-size: 0.8rem; cursor: pointer; transition: 0.2s; font-weight: bold; }
         .cad-btn:hover, .cad-btn.active { background: var(--primary-color); border-color: var(--primary-color); color: white; }
@@ -169,7 +168,6 @@ HTML_TEMPLATE = """
             <!-- العارض المعماري التفاعلي المتقدم -->
             <div class="viewer-container">
                 <div class="viewer-header">
-                    <!-- شريط أداة الرسم والتعديل شبيه بالأوتوكاد (يظهر بعد التوليد) -->
                     <div class="cad-toolbar" id="cadToolbar" style="display: none;">
                         <button type="button" class="cad-btn active" id="mode3dBtn" onclick="switchMode('3d')">عرض 3D 🧊</button>
                         <button type="button" class="cad-btn" id="modeDrawBtn" onclick="switchMode('draw')">رسم CAD ✏️</button>
@@ -589,7 +587,7 @@ HTML_TEMPLATE = """
                 downloadDxf.className = 'btn-download dxf show';
 
                 toggleRotateBtn.className = 'btn-toggle-rotate show';
-                cadToolbar.style.display = 'flex'; // إظهار شريط أدوات الرسم CAD بالكامل
+                cadToolbar.style.display = 'flex';
 
                 aiStatusTag.style.display = 'block';
             } catch (err) {
@@ -621,33 +619,4 @@ def generate_ai_design():
     apartments = request.form.get('apartments', '2')
     ceiling_height = request.form.get('ceilingHeight', '3.2')
     
-    clean_dim = dimensions.replace('*', 'x')
-    obj_filename = f"building_{style}_{floors}f_{apartments}apt_{clean_dim}.obj"
-    gltf_filename = f"building_{style}_{floors}f_{apartments}apt_{clean_dim}.gltf"
-    dxf_filename = f"floor_plan_{style}_{floors}f_{apartments}apt_{clean_dim}.dxf"
-    
-    obj_path = os.path.join(OUTPUT_DIR, obj_filename)
-    gltf_path = os.path.join(OUTPUT_DIR, gltf_filename)
-    dxf_path = os.path.join(OUTPUT_DIR, dxf_filename)
-
-    with open(obj_path, "w") as f:
-        f.write(f"# Home AI 3D - Engineered Model\n# Style: {style}\n# Dimensions: {dimensions}\n# Floors: {floors}\n# Apartments per floor: {apartments}\n# Ceiling Height: {ceiling_height}m\n")
-
-    with open(gltf_path, "w") as f:
-        f.write(f'{{\n  "asset": {{\n    "generator": "Home AI 3D Engine",\n    "version": "2.0"\n  }},\n  "metadata": {{\n    "apartments_per_floor": {apartments},\n    "ceiling_height": {ceiling_height}\n  }}\n}}')
-
-    with open(dxf_path, "w") as f:
-        f.write(f"0\nSECTION\n2\nHEADER\n0\nENDSEC\n0\nSECTION\n2\nTABLES\n0\nENDSEC\n0\nSECTION\n2\nENTITIES\n")
-        f.write(f"0\nTEXT\n8\nARCH_DATA\n10\n0.0\n20\n0.0\n40\n1.2\n1\nHome AI Plan - Dim: {dimensions} | Floors: {floors} | Apt/Floor: {apartments} | Height: {ceiling_height}m\n")
-        f.write(f"0\nENDSEC\n0\nEOF\n")
-
-    return jsonify({
-        "status": "success",
-        "obj_file": obj_filename,
-        "gltf_file": gltf_filename,
-        "dxf_file": dxf_filename,
-        "message": "تم توليد النموذج المعماري وملف الأوتوكاد بنجاح."
-    })
-
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    clean_dim = dimensions.replace('*', '
