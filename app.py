@@ -53,7 +53,7 @@ HTML_TEMPLATE = """
         .viewer-header { position: absolute; top: 15px; left: 20px; right: 20px; display: flex; justify-content: space-between; align-items: center; z-index: 10; flex-wrap: wrap; gap: 10px; }
         
         /* شريط أدوات الرسم شبيه بالأوتوكاد */
-        .cad-toolbar { display: flex; gap: 6px; background: rgba(15, 23, 42, 0.9); padding: 6px 12px; border-radius: 8px; border: 1px solid var(--border-color); }
+        .cad-toolbar { display: flex; gap: 6px; background: rgba(15, 23, 42, 0.95); padding: 6px 12px; border-radius: 8px; border: 1px solid var(--border-color); }
         .cad-btn { background: var(--card-bg); color: var(--text-color); border: 1px solid var(--border-color); padding: 6px 10px; border-radius: 6px; font-size: 0.8rem; cursor: pointer; transition: 0.2s; font-weight: bold; }
         .cad-btn:hover, .cad-btn.active { background: var(--primary-color); border-color: var(--primary-color); color: white; }
         
@@ -169,8 +169,8 @@ HTML_TEMPLATE = """
             <!-- العارض المعماري التفاعلي المتقدم -->
             <div class="viewer-container">
                 <div class="viewer-header">
-                    <!-- شريط أداة الرسم والتعديل شبيه بالأوتوكاد -->
-                    <div class="cad-toolbar">
+                    <!-- شريط أداة الرسم والتعديل شبيه بالأوتوكاد (يظهر بعد التوليد) -->
+                    <div class="cad-toolbar" id="cadToolbar" style="display: none;">
                         <button type="button" class="cad-btn active" id="mode3dBtn" onclick="switchMode('3d')">عرض 3D 🧊</button>
                         <button type="button" class="cad-btn" id="modeDrawBtn" onclick="switchMode('draw')">رسم CAD ✏️</button>
                         <button type="button" class="cad-btn" id="clearDrawBtn" onclick="clearDrawings()" style="color: var(--danger-color);">مسح الرسم ❌</button>
@@ -209,12 +209,11 @@ HTML_TEMPLATE = """
         let raycaster = new THREE.Raycaster();
         let mouse = new THREE.Vector2();
 
-        // متغيرات لوحة الرسم 2D CAD
-        let currentMode = '3d'; // '3d' أو 'draw'
+        let currentMode = '3d';
         let cadCanvas, cadCtx;
         let isDrawing = false;
         let startX = 0, startY = 0;
-        let userDrawings = []; // لتخزين الأشكال المرسومة
+        let userDrawings = [];
 
         function switchMode(mode) {
             currentMode = mode;
@@ -248,7 +247,6 @@ HTML_TEMPLATE = """
             redrawCAD();
         }
 
-        // إعداد تفاعل الرسم 2D شبيه بالأوتوكاد
         document.addEventListener('DOMContentLoaded', () => {
             const cadCanvas = document.getElementById('cadCanvas2D');
             
@@ -267,7 +265,6 @@ HTML_TEMPLATE = """
                 const currentY = e.clientY - rect.top;
 
                 redrawCAD();
-                // رسم خط مؤقت أثناء السحب
                 cadCtx.strokeStyle = '#3b82f6';
                 cadCtx.lineWidth = 2;
                 cadCtx.beginPath();
@@ -283,7 +280,6 @@ HTML_TEMPLATE = """
                 const endX = e.clientX - rect.left;
                 const endY = e.clientY - rect.top;
 
-                // حفظ الخط المرسوم
                 userDrawings.push({ type: 'line', x1: startX, y1: startY, x2: endX, y2: endY });
                 redrawCAD();
             });
@@ -294,7 +290,6 @@ HTML_TEMPLATE = """
             cadCtx.fillStyle = '#0b0f19';
             cadCtx.fillRect(0, 0, cadCanvas.width, cadCanvas.height);
 
-            // رسم شبكة هندسية خلفية (Grid)
             cadCtx.strokeStyle = '#1e293b';
             cadCtx.lineWidth = 1;
             const gridSize = 40;
@@ -305,7 +300,6 @@ HTML_TEMPLATE = """
                 cadCtx.beginPath(); cadCtx.moveTo(0, y); cadCtx.lineTo(cadCanvas.width, y); cadCtx.stroke();
             }
 
-            // رسم الخطوط المحفوظة للمستخدم
             cadCtx.strokeStyle = '#38bdf8';
             cadCtx.lineWidth = 2.5;
             userDrawings.forEach(d => {
@@ -314,7 +308,6 @@ HTML_TEMPLATE = """
                 cadCtx.lineTo(d.x2, d.y2);
                 cadCtx.stroke();
 
-                // إضافة علامة أبعاد توضيحية شبيهة بالأوتوكاد
                 const midX = (d.x1 + d.x2) / 2;
                 const midY = (d.y1 + d.y2) / 2;
                 cadCtx.fillStyle = '#94a3b8';
@@ -488,4 +481,173 @@ HTML_TEMPLATE = """
                 div.className = 'history-item';
                 
                 const span = document.createElement('span');
-                span.innerHTML = `🏢 ${p.desc.substring(0, 18)}... (${p.dim}
+                span.innerHTML = `🏢 ${p.desc.substring(0, 18)}... (${p.dim} | ${p.floors} طوابق)`;
+                span.onclick = () => {
+                    document.getElementById('desc').value = p.desc;
+                    document.getElementById('dim').value = p.dim;
+                    document.getElementById('floors').value = p.floors;
+                    document.getElementById('apartments').value = p.apartments;
+                    document.getElementById('ceilingHeight').value = p.ceilingHeight;
+                    document.getElementById('style').value = p.style;
+                    generateDetailedBuilding(p.floors, p.dim, p.apartments, p.ceilingHeight);
+                };
+
+                const delBtn = document.createElement('button');
+                delBtn.className = 'btn-delete-single';
+                delBtn.innerHTML = '❌';
+                delBtn.title = 'حذف هذا المشروع';
+                delBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    deleteProject(index);
+                };
+
+                div.appendChild(span);
+                div.appendChild(delBtn);
+                historyList.appendChild(div);
+            });
+        }
+
+        function addToHistory(desc, dim, floors, apartments, ceilingHeight, style) {
+            const project = { desc, dim, floors, apartments, ceilingHeight, style };
+            projectHistory.unshift(project);
+            if (projectHistory.length > 5) projectHistory.pop();
+            renderHistoryList();
+        }
+
+        function deleteProject(index) {
+            projectHistory.splice(index, 1);
+            renderHistoryList();
+        }
+
+        function clearAllHistory() {
+            projectHistory = [];
+            renderHistoryList();
+        }
+
+        document.getElementById('buildForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const btn = document.querySelector('.btn-submit');
+            const placeholder = document.getElementById('placeholder');
+            const canvas = document.getElementById('canvas3d');
+            const downloadObj = document.getElementById('downloadLinkObj');
+            const downloadGltf = document.getElementById('downloadLinkGltf');
+            const downloadDxf = document.getElementById('downloadLinkDxf');
+            const toggleRotateBtn = document.getElementById('toggleRotateBtn');
+            const cadToolbar = document.getElementById('cadToolbar');
+            const aiStatusTag = document.getElementById('aiStatusTag');
+            
+            const styleVal = document.getElementById('style').value;
+            const descVal = document.getElementById('desc').value;
+            const dimVal = document.getElementById('dim').value;
+            const floorsVal = parseInt(document.getElementById('floors').value) || 5;
+            const apartmentsVal = parseInt(document.getElementById('apartments').value) || 2;
+            const ceilingHeightVal = parseFloat(document.getElementById('ceilingHeight').value) || 3.2;
+            const fileInput = document.getElementById('siteFile');
+
+            btn.textContent = 'جاري هندسة الشقق، الارتفاعات وأوتوكاد DXF... ⏳';
+            btn.disabled = true;
+
+            try {
+                const formData = new FormData();
+                formData.append('style', styleVal);
+                formData.append('description', descVal);
+                formData.append('dimensions', dimVal);
+                formData.append('floors', floorsVal);
+                formData.append('apartments', apartmentsVal);
+                formData.append('ceilingHeight', ceilingHeightVal);
+                if (fileInput.files.length > 0) {
+                    formData.append('site_file', fileInput.files[0]);
+                }
+
+                const response = await fetch('/generate_ai_design', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+
+                await new Promise(resolve => setTimeout(resolve, 1500));
+                
+                placeholder.style.display = 'none';
+                canvas.style.display = 'block';
+
+                if (!renderer) {
+                    init3DViewer();
+                }
+                generateDetailedBuilding(floorsVal, dimVal, apartmentsVal, ceilingHeightVal);
+                addToHistory(descVal, dimVal, floorsVal, apartmentsVal, ceilingHeightVal, styleVal);
+
+                downloadObj.href = `/download/${data.obj_file}`;
+                downloadObj.download = data.obj_file;
+                downloadObj.className = 'btn-download show';
+
+                downloadGltf.href = `/download/${data.gltf_file}`;
+                downloadGltf.download = data.gltf_file;
+                downloadGltf.className = 'btn-download gltf show';
+
+                downloadDxf.href = `/download/${data.dxf_file}`;
+                downloadDxf.download = data.dxf_file;
+                downloadDxf.className = 'btn-download dxf show';
+
+                toggleRotateBtn.className = 'btn-toggle-rotate show';
+                cadToolbar.style.display = 'flex'; // إظهار شريط أدوات الرسم CAD بالكامل
+
+                aiStatusTag.style.display = 'block';
+            } catch (err) {
+                alert('حدث خطأ أثناء المعالجة، جرب مرة أخرى.');
+            } finally {
+                btn.textContent = 'توليد التصميم المعماري وملفات الأوتوكاد 🧠🏗️';
+                btn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
+"""
+
+@app.route('/')
+def home():
+    return render_template_string(HTML_TEMPLATE)
+
+@app.route('/download/<filename>')
+def download_file(filename):
+    return send_file(os.path.join(OUTPUT_DIR, filename), as_attachment=True)
+
+@app.route('/generate_ai_design', methods=['POST'])
+def generate_ai_design():
+    style = request.form.get('style', 'modern')
+    description = request.form.get('description', '')
+    dimensions = request.form.get('dimensions', '20*12')
+    floors = request.form.get('floors', '5')
+    apartments = request.form.get('apartments', '2')
+    ceiling_height = request.form.get('ceilingHeight', '3.2')
+    
+    clean_dim = dimensions.replace('*', 'x')
+    obj_filename = f"building_{style}_{floors}f_{apartments}apt_{clean_dim}.obj"
+    gltf_filename = f"building_{style}_{floors}f_{apartments}apt_{clean_dim}.gltf"
+    dxf_filename = f"floor_plan_{style}_{floors}f_{apartments}apt_{clean_dim}.dxf"
+    
+    obj_path = os.path.join(OUTPUT_DIR, obj_filename)
+    gltf_path = os.path.join(OUTPUT_DIR, gltf_filename)
+    dxf_path = os.path.join(OUTPUT_DIR, dxf_filename)
+
+    with open(obj_path, "w") as f:
+        f.write(f"# Home AI 3D - Engineered Model\n# Style: {style}\n# Dimensions: {dimensions}\n# Floors: {floors}\n# Apartments per floor: {apartments}\n# Ceiling Height: {ceiling_height}m\n")
+
+    with open(gltf_path, "w") as f:
+        f.write(f'{{\n  "asset": {{\n    "generator": "Home AI 3D Engine",\n    "version": "2.0"\n  }},\n  "metadata": {{\n    "apartments_per_floor": {apartments},\n    "ceiling_height": {ceiling_height}\n  }}\n}}')
+
+    with open(dxf_path, "w") as f:
+        f.write(f"0\nSECTION\n2\nHEADER\n0\nENDSEC\n0\nSECTION\n2\nTABLES\n0\nENDSEC\n0\nSECTION\n2\nENTITIES\n")
+        f.write(f"0\nTEXT\n8\nARCH_DATA\n10\n0.0\n20\n0.0\n40\n1.2\n1\nHome AI Plan - Dim: {dimensions} | Floors: {floors} | Apt/Floor: {apartments} | Height: {ceiling_height}m\n")
+        f.write(f"0\nENDSEC\n0\nEOF\n")
+
+    return jsonify({
+        "status": "success",
+        "obj_file": obj_filename,
+        "gltf_file": gltf_filename,
+        "dxf_file": dxf_filename,
+        "message": "تم توليد النموذج المعماري وملف الأوتوكاد بنجاح."
+    })
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)
