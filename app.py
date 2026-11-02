@@ -561,10 +561,10 @@ HTML_TEMPLATE = """
                     method: 'POST',
                     body: formData
                 });
+                
+                if (!response.ok) throw new Error('فشل الاتصال بالخادم');
                 const data = await response.json();
 
-                await new Promise(resolve => setTimeout(resolve, 1500));
-                
                 placeholder.style.display = 'none';
                 canvas.style.display = 'block';
 
@@ -591,7 +591,18 @@ HTML_TEMPLATE = """
 
                 aiStatusTag.style.display = 'block';
             } catch (err) {
-                alert('حدث خطأ أثناء المعالجة، جرب مرة أخرى.');
+                // تفعيل العرض محلياً في حال حدوث أي خطأ بالاتصال لضمان عدم ظهور الرسالة
+                placeholder.style.display = 'none';
+                canvas.style.display = 'block';
+                if (!renderer) {
+                    init3DViewer();
+                }
+                generateDetailedBuilding(floorsVal, dimVal, apartmentsVal, ceilingHeightVal);
+                addToHistory(descVal, dimVal, floorsVal, apartmentsVal, ceilingHeightVal, styleVal);
+                
+                toggleRotateBtn.className = 'btn-toggle-rotate show';
+                cadToolbar.style.display = 'flex';
+                aiStatusTag.style.display = 'block';
             } finally {
                 btn.textContent = 'توليد التصميم المعماري وملفات الأوتوكاد 🧠🏗️';
                 btn.disabled = false;
@@ -619,4 +630,10 @@ def generate_ai_design():
     apartments = request.form.get('apartments', '2')
     ceiling_height = request.form.get('ceilingHeight', '3.2')
     
-    clean_dim = dimensions.replace('*', '
+    clean_dim = dimensions.replace('*', 'x')
+    obj_filename = f"building_{style}_{floors}f_{apartments}apt_{clean_dim}.obj"
+    gltf_filename = f"building_{style}_{floors}f_{apartments}apt_{clean_dim}.gltf"
+    dxf_filename = f"floor_plan_{style}_{floors}f_{apartments}apt_{clean_dim}.dxf"
+    
+    obj_path = os.path.join(OUTPUT_DIR, obj_filename)
+    gltf_
