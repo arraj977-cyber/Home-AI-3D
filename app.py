@@ -13,7 +13,7 @@ HTML_TEMPLATE = """
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home AI 3D - المنصة الهندسية المتقدمة</title>
+    <title>Home AI 3D - المنصة الهندسية المتقدمة مع أدوات أوتوكاد</title>
     <!-- تضمين مكتبة Three.js للعارض ثلاثي الأبعاد -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
@@ -48,18 +48,30 @@ HTML_TEMPLATE = """
         .grid-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .btn-submit { background: linear-gradient(135deg, var(--primary-color), #1d4ed8); color: white; border: none; width: 100%; padding: 14px; font-size: 1.05rem; font-weight: bold; border-radius: 8px; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4); margin-top: 10px; }
         .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(59, 130, 246, 0.6); }
-        .viewer-container { display: flex; flex-direction: column; position: relative; background: #090d16; min-height: 650px; border-radius: 16px; border: 1px solid var(--border-color); overflow: hidden; justify-content: center; align-items: center; }
-        .viewer-header { position: absolute; top: 20px; left: 20px; right: 20px; display: flex; justify-content: space-between; align-items: center; z-index: 10; flex-wrap: wrap; gap: 10px; }
+        
+        .viewer-container { display: flex; flex-direction: column; position: relative; background: #090d16; min-height: 680px; border-radius: 16px; border: 1px solid var(--border-color); overflow: hidden; justify-content: center; align-items: center; }
+        .viewer-header { position: absolute; top: 15px; left: 20px; right: 20px; display: flex; justify-content: space-between; align-items: center; z-index: 10; flex-wrap: wrap; gap: 10px; }
+        
+        /* شريط أدوات الرسم شبيه بالأوتوكاد */
+        .cad-toolbar { display: flex; gap: 6px; background: rgba(15, 23, 42, 0.9); padding: 6px 12px; border-radius: 8px; border: 1px solid var(--border-color); }
+        .cad-btn { background: var(--card-bg); color: var(--text-color); border: 1px solid var(--border-color); padding: 6px 10px; border-radius: 6px; font-size: 0.8rem; cursor: pointer; transition: 0.2s; font-weight: bold; }
+        .cad-btn:hover, .cad-btn.active { background: var(--primary-color); border-color: var(--primary-color); color: white; }
+        
         .downloads-group { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
         .btn-download { background: var(--primary-color); color: white; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 0.8rem; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3); display: none; }
         .btn-download.gltf { background: var(--success-color); }
         .btn-download.dxf { background: var(--dxf-color); }
         .btn-download.show { display: inline-block; }
+        
         .btn-toggle-rotate { background: var(--accent-orange); color: white; border: none; padding: 6px 14px; border-radius: 6px; font-weight: bold; font-size: 0.8rem; cursor: pointer; box-shadow: 0 4px 10px rgba(249, 115, 22, 0.3); transition: 0.2s; display: none; }
         .btn-toggle-rotate.show { display: inline-block; }
-        .viewer-3d { width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; position: relative; }
+        
+        .viewer-views { width: 100%; height: 100%; display: flex; position: relative; }
+        .view-pane { width: 100%; height: 680px; display: flex; justify-content: center; align-items: center; position: relative; }
         .placeholder-3d { text-align: center; color: var(--text-muted); padding: 40px; z-index: 2; position: absolute; }
-        #canvas3d { width: 100%; height: 650px; display: none; cursor: crosshair; }
+        #canvas3d, #cadCanvas2D { width: 100%; height: 680px; display: none; position: absolute; top: 0; left: 0; }
+        #cadCanvas2D { background: #0b0f19; cursor: crosshair; z-index: 3; }
+        
         .ai-status-tag { position: absolute; bottom: 20px; background: rgba(15, 23, 42, 0.85); border: 1px solid var(--border-color); padding: 8px 16px; border-radius: 20px; font-size: 0.85rem; color: var(--accent-orange); display: none; z-index: 5; }
         
         .history-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
@@ -81,7 +93,7 @@ HTML_TEMPLATE = """
         <header>
             <div class="logo-area">
                 <span class="logo-title">HOME AI <span>3D</span></span>
-                <span class="badge">المنصة الهندسية المتقدمة للذكاء الاصطناعي 📐🏢</span>
+                <span class="badge">المنصة الهندسية المتقدمة مع أدوات أوتوكاد 📐🏢</span>
             </div>
         </header>
 
@@ -157,7 +169,13 @@ HTML_TEMPLATE = """
             <!-- العارض المعماري التفاعلي المتقدم -->
             <div class="viewer-container">
                 <div class="viewer-header">
-                    <span class="badge" style="background: rgba(16, 185, 129, 0.1); color: var(--success-color);">عارض التصميم المعماري ثلاثي الأبعاد</span>
+                    <!-- شريط أداة الرسم والتعديل شبيه بالأوتوكاد -->
+                    <div class="cad-toolbar">
+                        <button type="button" class="cad-btn active" id="mode3dBtn" onclick="switchMode('3d')">عرض 3D 🧊</button>
+                        <button type="button" class="cad-btn" id="modeDrawBtn" onclick="switchMode('draw')">رسم CAD ✏️</button>
+                        <button type="button" class="cad-btn" id="clearDrawBtn" onclick="clearDrawings()" style="color: var(--danger-color);">مسح الرسم ❌</button>
+                    </div>
+                    
                     <div class="downloads-group">
                         <button type="button" id="toggleRotateBtn" class="btn-toggle-rotate" onclick="toggleRotation()">إيقاف الحركة ⏸️</button>
                         <a href="#" id="downloadLinkObj" class="btn-download" download>تحميل OBJ 📥</a>
@@ -165,14 +183,19 @@ HTML_TEMPLATE = """
                         <a href="#" id="downloadLinkDxf" class="btn-download dxf" download>تحميل أوتوكاد DXF 📐📥</a>
                     </div>
                 </div>
-                <div class="viewer-3d">
-                    <div class="placeholder-3d" id="placeholder">
-                        <h3>جاهز لمعالجة الموقع المعماري!</h3>
-                        <p style="margin-top:8px;">حدد عدد الشقق وارتفاع السقف واضغط توليد لمشاهدة التفاصيل المعمارية.</p>
+
+                <div class="viewer-views">
+                    <div class="view-pane">
+                        <div class="placeholder-3d" id="placeholder">
+                            <h3>جاهز لمعالجة الموقع المعماري!</h3>
+                            <p style="margin-top:8px;">حدد متطلباتك واضغط توليد لمشاهدة المجسم ثلاثي الأبعاد ولوحة الرسم الهندسية.</p>
+                        </div>
+                        <canvas id="canvas3d"></canvas>
+                        <canvas id="cadCanvas2D"></canvas>
                     </div>
-                    <canvas id="canvas3d"></canvas>
                 </div>
-                <div id="aiStatusTag" class="ai-status-tag">✨ انقر على أي جزء من المبنى لتعديله أو استخدم عجلة الماوس للتقريب والابعاد (Zoom)</div>
+
+                <div id="aiStatusTag" class="ai-status-tag">✨ تم تفعيل لوحة الرسم الهندسية وعارض الـ 3D بنجاح</div>
             </div>
         </div>
     </div>
@@ -185,6 +208,125 @@ HTML_TEMPLATE = """
         let projectHistory = [];
         let raycaster = new THREE.Raycaster();
         let mouse = new THREE.Vector2();
+
+        // متغيرات لوحة الرسم 2D CAD
+        let currentMode = '3d'; // '3d' أو 'draw'
+        let cadCanvas, cadCtx;
+        let isDrawing = false;
+        let startX = 0, startY = 0;
+        let userDrawings = []; // لتخزين الأشكال المرسومة
+
+        function switchMode(mode) {
+            currentMode = mode;
+            const canvas3d = document.getElementById('canvas3d');
+            const cadCanvas2D = document.getElementById('cadCanvas2D');
+            const btn3d = document.getElementById('mode3dBtn');
+            const btnDraw = document.getElementById('modeDrawBtn');
+            const rotateBtn = document.getElementById('toggleRotateBtn');
+
+            if (mode === '3d') {
+                canvas3d.style.display = 'block';
+                cadCanvas2D.style.display = 'none';
+                btn3d.classList.add('active');
+                btnDraw.classList.remove('active');
+                if (rotateBtn.classList.contains('show')) rotateBtn.style.display = 'inline-block';
+            } else {
+                canvas3d.style.display = 'none';
+                cadCanvas2D.style.display = 'block';
+                btnDraw.classList.add('active');
+                btn3d.classList.remove('active');
+                rotateBtn.style.display = 'none';
+                initCADCanvas();
+            }
+        }
+
+        function initCADCanvas() {
+            cadCanvas = document.getElementById('cadCanvas2D');
+            cadCtx = cadCanvas.getContext('2d');
+            cadCanvas.width = cadCanvas.parentElement.clientWidth;
+            cadCanvas.height = cadCanvas.parentElement.clientHeight;
+            redrawCAD();
+        }
+
+        // إعداد تفاعل الرسم 2D شبيه بالأوتوكاد
+        document.addEventListener('DOMContentLoaded', () => {
+            const cadCanvas = document.getElementById('cadCanvas2D');
+            
+            cadCanvas.addEventListener('mousedown', (e) => {
+                if (currentMode !== 'draw') return;
+                isDrawing = true;
+                const rect = cadCanvas.getBoundingClientRect();
+                startX = e.clientX - rect.left;
+                startY = e.clientY - rect.top;
+            });
+
+            cadCanvas.addEventListener('mousemove', (e) => {
+                if (!isDrawing || currentMode !== 'draw') return;
+                const rect = cadCanvas.getBoundingClientRect();
+                const currentX = e.clientX - rect.left;
+                const currentY = e.clientY - rect.top;
+
+                redrawCAD();
+                // رسم خط مؤقت أثناء السحب
+                cadCtx.strokeStyle = '#3b82f6';
+                cadCtx.lineWidth = 2;
+                cadCtx.beginPath();
+                cadCtx.moveTo(startX, startY);
+                cadCtx.lineTo(currentX, currentY);
+                cadCtx.stroke();
+            });
+
+            cadCanvas.addEventListener('mouseup', (e) => {
+                if (!isDrawing || currentMode !== 'draw') return;
+                isDrawing = false;
+                const rect = cadCanvas.getBoundingClientRect();
+                const endX = e.clientX - rect.left;
+                const endY = e.clientY - rect.top;
+
+                // حفظ الخط المرسوم
+                userDrawings.push({ type: 'line', x1: startX, y1: startY, x2: endX, y2: endY });
+                redrawCAD();
+            });
+        });
+
+        function redrawCAD() {
+            if (!cadCtx) return;
+            cadCtx.fillStyle = '#0b0f19';
+            cadCtx.fillRect(0, 0, cadCanvas.width, cadCanvas.height);
+
+            // رسم شبكة هندسية خلفية (Grid)
+            cadCtx.strokeStyle = '#1e293b';
+            cadCtx.lineWidth = 1;
+            const gridSize = 40;
+            for (let x = 0; x < cadCanvas.width; x += gridSize) {
+                cadCtx.beginPath(); cadCtx.moveTo(x, 0); cadCtx.lineTo(x, cadCanvas.height); cadCtx.stroke();
+            }
+            for (let y = 0; y < cadCanvas.height; y += gridSize) {
+                cadCtx.beginPath(); cadCtx.moveTo(0, y); cadCtx.lineTo(cadCanvas.width, y); cadCtx.stroke();
+            }
+
+            // رسم الخطوط المحفوظة للمستخدم
+            cadCtx.strokeStyle = '#38bdf8';
+            cadCtx.lineWidth = 2.5;
+            userDrawings.forEach(d => {
+                cadCtx.beginPath();
+                cadCtx.moveTo(d.x1, d.y1);
+                cadCtx.lineTo(d.x2, d.y2);
+                cadCtx.stroke();
+
+                // إضافة علامة أبعاد توضيحية شبيهة بالأوتوكاد
+                const midX = (d.x1 + d.x2) / 2;
+                const midY = (d.y1 + d.y2) / 2;
+                cadCtx.fillStyle = '#94a3b8';
+                cadCtx.font = '11px system-ui';
+                cadCtx.fillText('Wall Line', midX + 5, midY - 5);
+            });
+        }
+
+        function clearDrawings() {
+            userDrawings = [];
+            redrawCAD();
+        }
 
         function toggleRotation() {
             isRotating = !isRotating;
@@ -225,7 +367,6 @@ HTML_TEMPLATE = """
             gridHelper.position.y = -1;
             scene.add(gridHelper);
 
-            // تدوير المجسم بالماوس
             canvas.addEventListener('mousedown', (e) => { isDragging = true; previousMousePosition = { x: e.clientX, y: e.clientY }; });
             canvas.addEventListener('mousemove', (e) => {
                 if (!isDragging || !buildingGroup) return;
@@ -237,14 +378,12 @@ HTML_TEMPLATE = """
             });
             window.addEventListener('mouseup', () => { isDragging = false; });
 
-            // ميزة تكبير وتصغير شاشة المجسم (Zoom In/Out) عبر عجلة الماوس
             canvas.addEventListener('wheel', (e) => {
                 e.preventDefault();
                 camera.position.z += e.deltaY * 0.03;
                 camera.position.z = Math.max(5, Math.min(50, camera.position.z));
             }, { passive: false });
 
-            // ميزة التعديل والنقر المباشر على أجزاء المجسم (Interactive Editing)
             canvas.addEventListener('click', (e) => {
                 const rect = canvas.getBoundingClientRect();
                 mouse.x = ((e.clientX - rect.left) / canvas.clientWidth) * 2 - 1;
@@ -255,7 +394,6 @@ HTML_TEMPLATE = """
                     const intersects = raycaster.intersectObjects(buildingGroup.children, true);
                     if (intersects.length > 0) {
                         const hitMesh = intersects[0].object;
-                        // تغيير لون العنصر عند النقر لتأكيد التعديل الهندسي
                         hitMesh.material.color.setHex(Math.random() * 0xffffff);
                     }
                 }
@@ -272,7 +410,7 @@ HTML_TEMPLATE = """
 
         function animate() {
             requestAnimationFrame(animate);
-            if (buildingGroup && isRotating && !isDragging) {
+            if (buildingGroup && isRotating && !isDragging && currentMode === '3d') {
                 buildingGroup.rotation.y += 0.002;
             }
             renderer.render(scene, camera);
@@ -350,171 +488,4 @@ HTML_TEMPLATE = """
                 div.className = 'history-item';
                 
                 const span = document.createElement('span');
-                span.innerHTML = `🏢 ${p.desc.substring(0, 18)}... (${p.dim} | ${p.floors} طوابق)`;
-                span.onclick = () => {
-                    document.getElementById('desc').value = p.desc;
-                    document.getElementById('dim').value = p.dim;
-                    document.getElementById('floors').value = p.floors;
-                    document.getElementById('apartments').value = p.apartments;
-                    document.getElementById('ceilingHeight').value = p.ceilingHeight;
-                    document.getElementById('style').value = p.style;
-                    generateDetailedBuilding(p.floors, p.dim, p.apartments, p.ceilingHeight);
-                };
-
-                const delBtn = document.createElement('button');
-                delBtn.className = 'btn-delete-single';
-                delBtn.innerHTML = '❌';
-                delBtn.title = 'حذف هذا المشروع';
-                delBtn.onclick = (e) => {
-                    e.stopPropagation();
-                    deleteProject(index);
-                };
-
-                div.appendChild(span);
-                div.appendChild(delBtn);
-                historyList.appendChild(div);
-            });
-        }
-
-        function addToHistory(desc, dim, floors, apartments, ceilingHeight, style) {
-            const project = { desc, dim, floors, apartments, ceilingHeight, style };
-            projectHistory.unshift(project);
-            if (projectHistory.length > 5) projectHistory.pop();
-            renderHistoryList();
-        }
-
-        function deleteProject(index) {
-            projectHistory.splice(index, 1);
-            renderHistoryList();
-        }
-
-        function clearAllHistory() {
-            projectHistory = [];
-            renderHistoryList();
-        }
-
-        document.getElementById('buildForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const btn = document.querySelector('.btn-submit');
-            const placeholder = document.getElementById('placeholder');
-            const canvas = document.getElementById('canvas3d');
-            const downloadObj = document.getElementById('downloadLinkObj');
-            const downloadGltf = document.getElementById('downloadLinkGltf');
-            const downloadDxf = document.getElementById('downloadLinkDxf');
-            const toggleRotateBtn = document.getElementById('toggleRotateBtn');
-            const aiStatusTag = document.getElementById('aiStatusTag');
-            
-            const styleVal = document.getElementById('style').value;
-            const descVal = document.getElementById('desc').value;
-            const dimVal = document.getElementById('dim').value;
-            const floorsVal = parseInt(document.getElementById('floors').value) || 5;
-            const apartmentsVal = parseInt(document.getElementById('apartments').value) || 2;
-            const ceilingHeightVal = parseFloat(document.getElementById('ceilingHeight').value) || 3.2;
-            const fileInput = document.getElementById('siteFile');
-
-            btn.textContent = 'جاري هندسة الشقق، الارتفاعات وأوتوكاد DXF... ⏳';
-            btn.disabled = true;
-
-            try {
-                const formData = new FormData();
-                formData.append('style', styleVal);
-                formData.append('description', descVal);
-                formData.append('dimensions', dimVal);
-                formData.append('floors', floorsVal);
-                formData.append('apartments', apartmentsVal);
-                formData.append('ceilingHeight', ceilingHeightVal);
-                if (fileInput.files.length > 0) {
-                    formData.append('site_file', fileInput.files[0]);
-                }
-
-                const response = await fetch('/generate_ai_design', {
-                    method: 'POST',
-                    body: formData
-                });
-                const data = await response.json();
-
-                await new Promise(resolve => setTimeout(resolve, 1500));
-                
-                placeholder.style.display = 'none';
-                canvas.style.display = 'block';
-
-                if (!renderer) {
-                    init3DViewer();
-                }
-                generateDetailedBuilding(floorsVal, dimVal, apartmentsVal, ceilingHeightVal);
-                addToHistory(descVal, dimVal, floorsVal, apartmentsVal, ceilingHeightVal, styleVal);
-
-                downloadObj.href = `/download/${data.obj_file}`;
-                downloadObj.download = data.obj_file;
-                downloadObj.className = 'btn-download show';
-
-                downloadGltf.href = `/download/${data.gltf_file}`;
-                downloadGltf.download = data.gltf_file;
-                downloadGltf.className = 'btn-download gltf show';
-
-                downloadDxf.href = `/download/${data.dxf_file}`;
-                downloadDxf.download = data.dxf_file;
-                downloadDxf.className = 'btn-download dxf show';
-
-                toggleRotateBtn.className = 'btn-toggle-rotate show';
-
-                aiStatusTag.style.display = 'block';
-            } catch (err) {
-                alert('حدث خطأ أثناء المعالجة، جرب مرة أخرى.');
-            } finally {
-                btn.textContent = 'توليد التصميم المعماري وملفات الأوتوكاد 🧠🏗️';
-                btn.disabled = false;
-            }
-        });
-    </script>
-</body>
-</html>
-"""
-
-@app.route('/')
-def home():
-    return render_template_string(HTML_TEMPLATE)
-
-@app.route('/download/<filename>')
-def download_file(filename):
-    return send_file(os.path.join(OUTPUT_DIR, filename), as_attachment=True)
-
-@app.route('/generate_ai_design', methods=['POST'])
-def generate_ai_design():
-    style = request.form.get('style', 'modern')
-    description = request.form.get('description', '')
-    dimensions = request.form.get('dimensions', '20*12')
-    floors = request.form.get('floors', '5')
-    apartments = request.form.get('apartments', '2')
-    ceiling_height = request.form.get('ceilingHeight', '3.2')
-    
-    clean_dim = dimensions.replace('*', 'x')
-    obj_filename = f"building_{style}_{floors}f_{apartments}apt_{clean_dim}.obj"
-    gltf_filename = f"building_{style}_{floors}f_{apartments}apt_{clean_dim}.gltf"
-    dxf_filename = f"floor_plan_{style}_{floors}f_{apartments}apt_{clean_dim}.dxf"
-    
-    obj_path = os.path.join(OUTPUT_DIR, obj_filename)
-    gltf_path = os.path.join(OUTPUT_DIR, gltf_filename)
-    dxf_path = os.path.join(OUTPUT_DIR, dxf_filename)
-
-    with open(obj_path, "w") as f:
-        f.write(f"# Home AI 3D - Engineered Model\n# Style: {style}\n# Dimensions: {dimensions}\n# Floors: {floors}\n# Apartments per floor: {apartments}\n# Ceiling Height: {ceiling_height}m\n")
-
-    with open(gltf_path, "w") as f:
-        f.write(f'{{\n  "asset": {{\n    "generator": "Home AI 3D Engine",\n    "version": "2.0"\n  }},\n  "metadata": {{\n    "apartments_per_floor": {apartments},\n    "ceiling_height": {ceiling_height}\n  }}\n}}')
-
-    with open(dxf_path, "w") as f:
-        f.write(f"0\nSECTION\n2\nHEADER\n0\nENDSEC\n0\nSECTION\n2\nTABLES\n0\nENDSEC\n0\nSECTION\n2\nENTITIES\n")
-        f.write(f"0\nTEXT\n8\nARCH_DATA\n10\n0.0\n20\n0.0\n40\n1.2\n1\nHome AI Plan - Dim: {dimensions} | Floors: {floors} | Apt/Floor: {apartments} | Height: {ceiling_height}m\n")
-        f.write(f"0\nENDSEC\n0\nEOF\n")
-
-    return jsonify({
-        "status": "success",
-        "obj_file": obj_filename,
-        "gltf_file": gltf_filename,
-        "dxf_file": dxf_filename,
-        "message": "تم توليد النموذج المعماري وملف الأوتوكاد بنجاح."
-    })
-
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+                span.innerHTML = `🏢 ${p.desc.substring(0, 18)}... (${p.dim}
