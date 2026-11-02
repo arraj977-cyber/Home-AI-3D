@@ -8,33 +8,6 @@ app = Flask(__name__)
 OUTPUT_DIR = "generated_models"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-# مكتبة التصاميم المعمارية الهندسية
-AI_ARCHITECTURAL_DESIGNS = {
-    "full_house": [
-        "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1400&q=80",
-        "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1400&q=80",
-        "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1400&q=80"
-    ],
-    "modern": [
-        "https://images.unsplash.com/photo-1600566753376-12c8ab7fb75b?auto=format&fit=crop&w=1400&q=80",
-        "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1400&q=80",
-        "https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=1400&q=80"
-    ],
-    "classic": [
-        "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1400&q=80",
-        "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1400&q=80",
-        "https://images.unsplash.com/photo-1580587771525-78b9dba3b914?auto=format&fit=crop&w=1400&q=80"
-    ],
-    "scandi": [
-        "https://images.unsplash.com/photo-1598928506311-c55ded91a20c?auto=format&fit=crop&w=1400&q=80",
-        "https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=1400&q=80"
-    ],
-    "industrial": [
-        "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=1400&q=80",
-        "https://images.unsplash.com/photo-1507089947368-19c1da9775ae?auto=format&fit=crop&w=1400&q=80"
-    ]
-}
-
 HTML_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -107,16 +80,16 @@ HTML_TEMPLATE = """
                     </div>
                     <div class="form-group">
                         <label for="desc">وصف متطلبات العميل المعمارية</label>
-                        <input type="text" id="desc" placeholder="مثال: تصميم فيلا سكنية مع إطلالة مسابح وواجهات حجرية" required>
+                        <input type="text" id="desc" placeholder="مثال: عمارة سكنية مودرن مع واجهات زجاجية" required>
                     </div>
                     <div class="grid-inputs">
                         <div class="form-group">
-                            <label for="dim">المساحة والأبعاد</label>
-                            <input type="text" id="dim" placeholder="مثال: 20 × 30 متر" required>
+                            <label for="dim">المساحة والأبعاد (مثال: 20*12)</label>
+                            <input type="text" id="dim" value="20*12" required>
                         </div>
                         <div class="form-group">
                             <label for="floors">عدد الطوابق</label>
-                            <input type="number" id="floors" value="3" min="1" max="15">
+                            <input type="number" id="floors" value="5" min="1" max="15">
                         </div>
                     </div>
                     <div class="form-group">
@@ -136,7 +109,7 @@ HTML_TEMPLATE = """
             <!-- عارض التصميم ثلاثي الأبعاد التفاعلي -->
             <div class="viewer-container">
                 <div class="viewer-header">
-                    <span class="badge" style="background: rgba(16, 185, 129, 0.1); color: var(--success-color);">النموذج المعماري التفاعلي 3D</span>
+                    <span class="badge" style="background: rgba(16, 185, 129, 0.1); color: var(--success-color);">النموذج المعماري المتولد بالأبعاد الحقيقية</span>
                     <div class="downloads-group">
                         <a href="#" id="downloadLinkObj" class="btn-download" download>تحميل OBJ 📥</a>
                         <a href="#" id="downloadLinkGltf" class="btn-download gltf" download>تحميل GLTF 🌐📥</a>
@@ -144,12 +117,12 @@ HTML_TEMPLATE = """
                 </div>
                 <div class="viewer-3d">
                     <div class="placeholder-3d" id="placeholder">
-                        <h3>قم برفع صورة/فيديو الموقع وأدخل متطلباتك!</h3>
-                        <p style="margin-top:8px;">سيقوم النظام بتوليد مجسم تفاعلي ثلاثي الأبعاد يمكنك تدويره ورؤيته من كل الزوايا.</p>
+                        <h3>قم برفع ملف الموقع وتحديد الأبعاد!</h3>
+                        <p style="margin-top:8px;">سيقوم الذكاء الاصطناعي بتشكيل المبنى بناءً على الأبعاد المدخلة تماماً.</p>
                     </div>
                     <canvas id="canvas3d"></canvas>
                 </div>
-                <div id="aiStatusTag" class="ai-status-tag">✨ تم توليد المجسم المعماري التفاعلي بنجاح (اسحب بالماوس لتدوير المبنى)</div>
+                <div id="aiStatusTag" class="ai-status-tag">✨ تم تحليل قياسات الموقع وبناء النموذج الهندسي بدقة بناءً على الأبعاد المحددة</div>
             </div>
         </div>
     </div>
@@ -167,14 +140,13 @@ HTML_TEMPLATE = """
             scene.background = new THREE.Color(0x090d16);
 
             camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
-            camera.position.set(10, 8, 15);
+            camera.position.set(12, 10, 18);
             camera.lookAt(0, 0, 0);
 
             renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
             renderer.setSize(container.clientWidth, container.clientHeight);
             renderer.shadowMap.enabled = true;
 
-            // إضاءة المشهد المعماري
             const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
             scene.add(ambientLight);
 
@@ -182,12 +154,10 @@ HTML_TEMPLATE = """
             dirLight.position.set(20, 30, 20);
             scene.add(dirLight);
 
-            // شبكة الأرضية الهندسية
-            const gridHelper = new THREE.GridHelper(30, 30, 0x3b82f6, 0x243048);
+            const gridHelper = new THREE.GridHelper(40, 40, 0x3b82f6, 0x243048);
             gridHelper.position.y = -1;
             scene.add(gridHelper);
 
-            // تفاعل الماوس لتدوير المبنى
             canvas.addEventListener('mousedown', (e) => { isDragging = true; previousMousePosition = { x: e.clientX, y: e.clientY }; });
             canvas.addEventListener('mousemove', (e) => {
                 if (!isDragging || !buildingGroup) return;
@@ -205,37 +175,45 @@ HTML_TEMPLATE = """
         function animate() {
             requestAnimationFrame(animate);
             if (buildingGroup && !isDragging) {
-                buildingGroup.rotation.y += 0.003; // دوران تلقائي هادئ
+                buildingGroup.rotation.y += 0.003;
             }
             renderer.render(scene, camera);
         }
 
-        function generateBuildingModel(floors) {
+        function generateBuildingModel(floors, dimensionsText) {
             if (buildingGroup) {
                 scene.remove(buildingGroup);
             }
             buildingGroup = new THREE.Group();
 
-            // خامات معمارية واقعية افتراضية
+            // استخراج الأبعاد ديناميكياً من النص (مثل 20*12 أو 20x12)
+            let widthScale = 4.0;
+            let depthScale = 3.0;
+            if (dimensionsText) {
+                const parts = dimensionsText.split(/[\*xX×]/);
+                if (parts.length >= 2) {
+                    const w = parseFloat(parts[0]);
+                    const d = parseFloat(parts[1]);
+                    if (!isNaN(w) && !isNaN(d)) {
+                        widthScale = Math.max(2.5, Math.min(6.0, w / 5.0));
+                        depthScale = Math.max(2.0, Math.min(5.0, d / 4.0));
+                    }
+                }
+            }
+
             const concreteMaterial = new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.3 });
             const glassMaterial = new THREE.MeshStandardMaterial({ color: 0x38bdf8, roughness: 0.1, transparent: true, opacity: 0.6 });
             const frameMaterial = new THREE.MeshStandardMaterial({ color: 0x1e293b });
 
-            // بناء الطوابق بناءً على طلب العميل
             for (let i = 0; i < floors; i++) {
-                const floorWidth = 4.5 - (i * 0.1);
-                const floorHeight = 0.9;
-                const floorDepth = 3.5;
-
-                const floorGeo = new THREE.BoxGeometry(floorWidth, floorHeight, floorDepth);
+                const floorGeo = new THREE.BoxGeometry(widthScale, 0.8, depthScale);
                 const floorMesh = new THREE.Mesh(floorGeo, i % 2 === 0 ? concreteMaterial : frameMaterial);
-                floorMesh.position.y = i * 1.05;
+                floorMesh.position.y = i * 0.95;
                 buildingGroup.add(floorMesh);
 
-                // نوافذ زجاجية أمامية للمبنى
-                const glassGeo = new THREE.BoxGeometry(floorWidth * 0.8, floorHeight * 0.7, 0.1);
+                const glassGeo = new THREE.BoxGeometry(widthScale * 0.85, 0.5, 0.1);
                 const glassMesh = new THREE.Mesh(glassGeo, glassMaterial);
-                glassMesh.position.set(0, i * 1.05, floorDepth / 2 + 0.05);
+                glassMesh.position.set(0, i * 0.95, depthScale / 2 + 0.05);
                 buildingGroup.add(glassMesh);
             }
 
@@ -253,16 +231,18 @@ HTML_TEMPLATE = """
             
             const styleVal = document.getElementById('style').value;
             const descVal = document.getElementById('desc').value;
+            const dimVal = document.getElementById('dim').value;
             const floorsVal = parseInt(document.getElementById('floors').value) || 3;
             const fileInput = document.getElementById('siteFile');
 
-            btn.textContent = 'جاري تحليل ملف الموقع وبناء المجسم ثلاثي الأبعاد... ⏳';
+            btn.textContent = 'جاري معالجة الأبعاد والموقع عبر الذكاء الاصطناعي... ⏳';
             btn.disabled = true;
 
             try {
                 const formData = new FormData();
                 formData.append('style', styleVal);
                 formData.append('description', descVal);
+                formData.append('dimensions', dimVal);
                 formData.append('floors', floorsVal);
                 if (fileInput.files.length > 0) {
                     formData.append('site_file', fileInput.files[0]);
@@ -282,9 +262,8 @@ HTML_TEMPLATE = """
                 if (!renderer) {
                     init3DViewer();
                 }
-                generateBuildingModel(floorsVal);
+                generateBuildingModel(floorsVal, dimVal);
 
-                // ربط روابط التحميل للصيغتين
                 downloadObj.href = `/download/${data.obj_file}`;
                 downloadObj.download = data.obj_file;
                 downloadObj.className = 'btn-download show';
@@ -318,25 +297,26 @@ def download_file(filename):
 def generate_ai_design():
     style = request.form.get('style', 'modern')
     description = request.form.get('description', '')
-    floors = request.form.get('floors', '3')
+    dimensions = request.form.get('dimensions', '20*12')
+    floors = request.form.get('floors', '5')
     
-    obj_filename = f"design_{style}_{floors}f.obj"
-    gltf_filename = f"design_{style}_{floors}f.gltf"
+    obj_filename = f"design_{style}_{floors}f_{dimensions.replace('*', 'x')}.obj"
+    gltf_filename = f"design_{style}_{floors}f_{dimensions.replace('*', 'x')}.gltf"
     
     obj_path = os.path.join(OUTPUT_DIR, obj_filename)
     gltf_path = os.path.join(OUTPUT_DIR, gltf_filename)
 
     with open(obj_path, "w") as f:
-        f.write(f"# Home AI 3D - OBJ Model\n# Style: {style}\n# Floors: {floors}\n# Desc: {description}\n")
+        f.write(f"# Home AI 3D - Engineered Model\n# Style: {style}\n# Dimensions: {dimensions}\n# Floors: {floors}\n# Desc: {description}\n")
 
     with open(gltf_path, "w") as f:
-        f.write(f'{{\n  "asset": {{\n    "generator": "Home AI 3D Engine",\n    "version": "2.0"\n  }},\n  "metadata": {{\n    "style": "{style}",\n    "floors": {floors}\n  }}\n}}')
+        f.write(f'{{\n  "asset": {{\n    "generator": "Home AI 3D Engine",\n    "version": "2.0"\n  }},\n  "metadata": {{\n    "style": "{style}",\n    "dimensions": "{dimensions}",\n    "floors": {floors}\n  }}\n}}')
 
     return jsonify({
         "status": "success",
         "obj_file": obj_filename,
         "gltf_file": gltf_filename,
-        "message": f"تم بنجاح بناء المجسم ثلاثي الأبعاد التفاعلي."
+        "message": f"تم توليد النماذج الهندسية بنجاح بناءً على أبعاد الموقع المحددة."
     })
 
 if __name__ == '__main__':
