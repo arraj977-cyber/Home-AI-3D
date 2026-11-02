@@ -23,6 +23,7 @@ HTML_TEMPLATE = """
             --primary-color: #3b82f6;
             --primary-hover: #2563eb;
             --accent-orange: #f97316;
+            --danger-color: #ef4444;
             --text-color: #f8fafc;
             --text-muted: #94a3b8;
             --border-color: #243048;
@@ -60,9 +61,17 @@ HTML_TEMPLATE = """
         .placeholder-3d { text-align: center; color: var(--text-muted); padding: 40px; z-index: 2; position: absolute; }
         #canvas3d { width: 100%; height: 650px; display: none; }
         .ai-status-tag { position: absolute; bottom: 20px; background: rgba(15, 23, 42, 0.85); border: 1px solid var(--border-color); padding: 8px 16px; border-radius: 20px; font-size: 0.85rem; color: var(--accent-orange); display: none; z-index: 5; }
-        .history-list { max-height: 120px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
-        .history-item { background: #0b0f19; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border-color); font-size: 0.8rem; cursor: pointer; transition: 0.2s; }
-        .history-item:hover { border-color: var(--primary-color); }
+        
+        .history-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .btn-clear-history { background: transparent; color: var(--danger-color); border: 1px solid var(--danger-color); padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; cursor: pointer; transition: 0.2s; }
+        .btn-clear-history:hover { background: var(--danger-color); color: white; }
+        .history-list { max-height: 130px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
+        .history-item { background: #0b0f19; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border-color); font-size: 0.8rem; display: flex; justify-content: space-between; align-items: center; transition: 0.2s; }
+        .history-item span { cursor: pointer; flex: 1; }
+        .history-item span:hover { color: var(--primary-color); }
+        .btn-delete-single { background: transparent; color: var(--text-muted); border: none; cursor: pointer; font-size: 0.85rem; padding: 0 4px; transition: 0.2s; }
+        .btn-delete-single:hover { color: var(--danger-color); }
+        
         .sun-control { display: flex; align-items: center; gap: 10px; margin-top: 5px; font-size: 0.85rem; color: var(--text-muted); }
         .sun-control input { flex: 1; }
     </style>
@@ -135,7 +144,10 @@ HTML_TEMPLATE = """
 
                 <!-- سجل المشاريع -->
                 <div class="card" style="padding: 15px;">
-                    <label style="margin-bottom: 6px;">📂 سجل المشاريع الهندسية السابقة</label>
+                    <div class="history-header">
+                        <label style="margin: 0;">📂 سجل المشاريع الهندسية السابقة</label>
+                        <button type="button" class="btn-clear-history" onclick="clearAllHistory()">حذف السجل بالكامل 🗑️</button>
+                    </div>
                     <div class="history-list" id="historyList">
                         <span style="color: var(--text-muted); font-size: 0.75rem;">لا توجد مشاريع سجّلت بعد...</span>
                     </div>
@@ -299,18 +311,20 @@ HTML_TEMPLATE = """
             scene.add(buildingGroup);
         }
 
-        function addToHistory(desc, dim, floors, apartments, ceilingHeight, style) {
-            const project = { desc, dim, floors, apartments, ceilingHeight, style };
-            projectHistory.unshift(project);
-            if (projectHistory.length > 5) projectHistory.pop();
-
+        function renderHistoryList() {
             const historyList = document.getElementById('historyList');
             historyList.innerHTML = '';
-            projectHistory.forEach((p) => {
+            if (projectHistory.length === 0) {
+                historyList.innerHTML = '<span style="color: var(--text-muted); font-size: 0.75rem;">لا توجد مشاريع سجّلت بعد...</span>';
+                return;
+            }
+            projectHistory.forEach((p, index) => {
                 const div = document.createElement('div');
                 div.className = 'history-item';
-                div.innerHTML = `🏢 ${p.desc.substring(0, 22)}... (${p.dim} | ${p.floors} طوابق | ${p.apartments} شقق)`;
-                div.onclick = () => {
+                
+                const span = document.createElement('span');
+                span.innerHTML = `🏢 ${p.desc.substring(0, 18)}... (${p.dim} | ${p.floors} طوابق)`;
+                span.onclick = () => {
                     document.getElementById('desc').value = p.desc;
                     document.getElementById('dim').value = p.dim;
                     document.getElementById('floors').value = p.floors;
@@ -319,8 +333,37 @@ HTML_TEMPLATE = """
                     document.getElementById('style').value = p.style;
                     generateDetailedBuilding(p.floors, p.dim, p.apartments, p.ceilingHeight);
                 };
+
+                const delBtn = document.createElement('button');
+                delBtn.className = 'btn-delete-single';
+                delBtn.innerHTML = '❌';
+                delBtn.title = 'حذف هذا المشروع';
+                delBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    deleteProject(index);
+                };
+
+                div.appendChild(span);
+                div.appendChild(delBtn);
                 historyList.appendChild(div);
             });
+        }
+
+        function addToHistory(desc, dim, floors, apartments, ceilingHeight, style) {
+            const project = { desc, dim, floors, apartments, ceilingHeight, style };
+            projectHistory.unshift(project);
+            if (projectHistory.length > 5) projectHistory.pop();
+            renderHistoryList();
+        }
+
+        function deleteProject(index) {
+            projectHistory.splice(index, 1);
+            renderHistoryList();
+        }
+
+        function clearAllHistory() {
+            projectHistory = [];
+            renderHistoryList();
         }
 
         document.getElementById('buildForm').addEventListener('submit', async function(e) {
@@ -374,7 +417,6 @@ HTML_TEMPLATE = """
                 generateDetailedBuilding(floorsVal, dimVal, apartmentsVal, ceilingHeightVal);
                 addToHistory(descVal, dimVal, floorsVal, apartmentsVal, ceilingHeightVal, styleVal);
 
-                // إظهار أزرار التحميل وزر التحكم بالحركة فور التوليد
                 downloadObj.href = `/download/${data.obj_file}`;
                 downloadObj.download = data.obj_file;
                 downloadObj.className = 'btn-download show';
