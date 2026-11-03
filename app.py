@@ -12,8 +12,8 @@ HTML_TEMPLATE = """
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home AI 3D - المنصة الهندسية الواقعية المتقدمة</title>
-    <!-- تضمين مكتبة Three.js للعارض ثلاثي الأبعاد -->
+    <title>Home AI 3D - المنصة الهندسية الواقعية للمباني</title>
+    <!-- تضمين مكتبة Three.js العارض ثلاثي الأبعاد -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         :root {
