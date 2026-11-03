@@ -13,7 +13,7 @@ HTML_TEMPLATE = """
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Home AI 3D - المنصة الهندسية المتقدمة</title>
-    <!-- تضمين مكتبة Three.js للعارض ثلاثي الأبعاد -->
+    <!-- تضمين مكتبة Three.js من CDN موثوق -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         :root {
@@ -331,71 +331,73 @@ HTML_TEMPLATE = """
         }
 
         function init3DViewer() {
-            const container = document.querySelector('.viewer-3d');
+            const container = document.querySelector('.viewer-3d') || document.querySelector('.view-pane');
             const canvas = document.getElementById('canvas3d');
             
-            scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x090d16);
+            if (!scene) {
+                scene = new THREE.Scene();
+                scene.background = new THREE.Color(0x090d16);
 
-            camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
-            camera.position.set(16, 14, 24);
-            camera.lookAt(0, 0, 0);
+                camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
+                camera.position.set(16, 14, 24);
+                camera.lookAt(0, 0, 0);
 
-            renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
-            renderer.setSize(container.clientWidth, container.clientHeight);
-            renderer.shadowMap.enabled = true;
+                renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+                renderer.setSize(container.clientWidth, container.clientHeight);
+                renderer.shadowMap.enabled = true;
 
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
-            scene.add(ambientLight);
+                const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+                scene.add(ambientLight);
 
-            dirLight = new THREE.DirectionalLight(0xffffff, 1.4);
-            dirLight.position.set(20, 35, 20);
-            dirLight.castShadow = true;
-            scene.add(dirLight);
+                dirLight = new THREE.DirectionalLight(0xffffff, 1.4);
+                dirLight.position.set(20, 35, 20);
+                dirLight.castShadow = true;
+                scene.add(dirLight);
 
-            const gridHelper = new THREE.GridHelper(50, 50, 0x3b82f6, 0x243048);
-            gridHelper.position.y = -1;
-            scene.add(gridHelper);
+                const gridHelper = new THREE.GridHelper(50, 50, 0x3b82f6, 0x243048);
+                gridHelper.position.y = -1;
+                scene.add(gridHelper);
 
-            canvas.addEventListener('mousedown', (e) => { isDragging = true; previousMousePosition = { x: e.clientX, y: e.clientY }; });
-            canvas.addEventListener('mousemove', (e) => {
-                if (!isDragging || !buildingGroup) return;
-                const deltaX = e.clientX - previousMousePosition.x;
-                const deltaY = e.clientY - previousMousePosition.y;
-                buildingGroup.rotation.y += deltaX * 0.008;
-                buildingGroup.rotation.x += deltaY * 0.008;
-                previousMousePosition = { x: e.clientX, y: e.clientY };
-            });
-            window.addEventListener('mouseup', () => { isDragging = false; });
+                canvas.addEventListener('mousedown', (e) => { isDragging = true; previousMousePosition = { x: e.clientX, y: e.clientY }; });
+                canvas.addEventListener('mousemove', (e) => {
+                    if (!isDragging || !buildingGroup) return;
+                    const deltaX = e.clientX - previousMousePosition.x;
+                    const deltaY = e.clientY - previousMousePosition.y;
+                    buildingGroup.rotation.y += deltaX * 0.008;
+                    buildingGroup.rotation.x += deltaY * 0.008;
+                    previousMousePosition = { x: e.clientX, y: e.clientY };
+                });
+                window.addEventListener('mouseup', () => { isDragging = false; });
 
-            canvas.addEventListener('wheel', (e) => {
-                e.preventDefault();
-                camera.position.z += e.deltaY * 0.03;
-                camera.position.z = Math.max(5, Math.min(50, camera.position.z));
-            }, { passive: false });
+                canvas.addEventListener('wheel', (e) => {
+                    e.preventDefault();
+                    camera.position.z += e.deltaY * 0.03;
+                    camera.position.z = Math.max(5, Math.min(50, camera.position.z));
+                }, { passive: false });
 
-            canvas.addEventListener('click', (e) => {
-                const rect = canvas.getBoundingClientRect();
-                mouse.x = ((e.clientX - rect.left) / canvas.clientWidth) * 2 - 1;
-                mouse.y = -((e.clientY - rect.top) / canvas.clientHeight) * 2 + 1;
+                canvas.addEventListener('click', (e) => {
+                    const rect = canvas.getBoundingClientRect();
+                    mouse.x = ((e.clientX - rect.left) / canvas.clientWidth) * 2 - 1;
+                    mouse.y = -((e.clientY - rect.top) / canvas.clientHeight) * 2 + 1;
 
-                raycaster.setFromCamera(mouse, camera);
-                if (buildingGroup) {
-                    const intersects = raycaster.intersectObjects(buildingGroup.children, true);
-                    if (intersects.length > 0) {
-                        const hitMesh = intersects[0].object;
-                        hitMesh.material.color.setHex(Math.random() * 0xffffff);
+                    raycaster.setFromCamera(mouse, camera);
+                    if (buildingGroup) {
+                        const intersects = raycaster.intersectObjects(buildingGroup.children, true);
+                        if (intersects.length > 0) {
+                            const hitMesh = intersects[0].object;
+                            hitMesh.material.color.setHex(Math.random() * 0xffffff);
+                        }
                     }
-                }
-            });
+                });
 
-            document.getElementById('sunAngle').addEventListener('input', (e) => {
-                const angle = (e.target.value * Math.PI) / 180;
-                dirLight.position.x = Math.cos(angle) * 30;
-                dirLight.position.z = Math.sin(angle) * 30;
-            });
+                document.getElementById('sunAngle').addEventListener('input', (e) => {
+                    const angle = (e.target.value * Math.PI) / 180;
+                    dirLight.position.x = Math.cos(angle) * 30;
+                    dirLight.position.z = Math.sin(angle) * 30;
+                });
 
-            animate();
+                animate();
+            }
         }
 
         function animate() {
@@ -403,7 +405,9 @@ HTML_TEMPLATE = """
             if (buildingGroup && isRotating && !isDragging && currentMode === '3d') {
                 buildingGroup.rotation.y += 0.002;
             }
-            renderer.render(scene, camera);
+            if (renderer && scene && camera) {
+                renderer.render(scene, camera);
+            }
         }
 
         function generateDetailedBuilding(floors, dimensionsText, apartments, ceilingHeight) {
@@ -521,61 +525,61 @@ HTML_TEMPLATE = """
             renderHistoryList();
         }
 
-        // دالة التوليد المباشرة الفورية بدون انتظار شبكي لضمان الاستجابة التامة
-        document.getElementById('buildForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const btn = document.querySelector('.btn-submit');
-            const placeholder = document.getElementById('placeholder');
-            const canvas = document.getElementById('canvas3d');
-            const downloadObj = document.getElementById('downloadLinkObj');
-            const downloadGltf = document.getElementById('downloadLinkGltf');
-            const downloadDxf = document.getElementById('downloadLinkDxf');
-            const toggleRotateBtn = document.getElementById('toggleRotateBtn');
-            const cadToolbar = document.getElementById('cadToolbar');
-            const aiStatusTag = document.getElementById('aiStatusTag');
-            
-            const styleVal = document.getElementById('style').value;
-            const descVal = document.getElementById('desc').value;
-            const dimVal = document.getElementById('dim').value;
-            const floorsVal = parseInt(document.getElementById('floors').value) || 5;
-            const apartmentsVal = parseInt(document.getElementById('apartments').value) || 2;
-            const ceilingHeightVal = parseFloat(document.getElementById('ceilingHeight').value) || 3.2;
+        // تشغيل الحدث فوراً دون أي انتظار شبكي عقيم
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('buildForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const btn = document.querySelector('.btn-submit');
+                const placeholder = document.getElementById('placeholder');
+                const canvas = document.getElementById('canvas3d');
+                const downloadObj = document.getElementById('downloadLinkObj');
+                const downloadGltf = document.getElementById('downloadLinkGltf');
+                const downloadDxf = document.getElementById('downloadLinkDxf');
+                const toggleRotateBtn = document.getElementById('toggleRotateBtn');
+                const cadToolbar = document.getElementById('cadToolbar');
+                const aiStatusTag = document.getElementById('aiStatusTag');
+                
+                const styleVal = document.getElementById('style').value;
+                const descVal = document.getElementById('desc').value;
+                const dimVal = document.getElementById('dim').value;
+                const floorsVal = parseInt(document.getElementById('floors').value) || 5;
+                const apartmentsVal = parseInt(document.getElementById('apartments').value) || 2;
+                const ceilingHeightVal = parseFloat(document.getElementById('ceilingHeight').value) || 3.2;
 
-            btn.textContent = 'جاري التوليد الفوري... ⏳';
-            btn.disabled = true;
+                btn.textContent = 'جاري التوليد... ⏳';
+                btn.disabled = true;
 
-            setTimeout(() => {
-                placeholder.style.display = 'none';
-                canvas.style.display = 'block';
+                setTimeout(() => {
+                    placeholder.style.display = 'none';
+                    canvas.style.display = 'block';
 
-                if (!renderer) {
                     init3DViewer();
-                }
-                generateDetailedBuilding(floorsVal, dimVal, apartmentsVal, ceilingHeightVal);
-                addToHistory(descVal, dimVal, floorsVal, apartmentsVal, ceilingHeightVal, styleVal);
+                    generateDetailedBuilding(floorsVal, dimVal, apartmentsVal, ceilingHeightVal);
+                    addToHistory(descVal, dimVal, floorsVal, apartmentsVal, ceilingHeightVal, styleVal);
 
-                const cleanDim = dimVal.replace('*', 'x');
-                const fileBase = `building_${styleVal}_${floorsVal}f_${apartmentsVal}apt_${cleanDim}`;
+                    const cleanDim = dimVal.replace('*', 'x');
+                    const fileBase = `building_${styleVal}_${floorsVal}f_${apartmentsVal}apt_${cleanDim}`;
 
-                downloadObj.href = `/download/${fileBase}.obj`;
-                downloadObj.download = `${fileBase}.obj`;
-                downloadObj.className = 'btn-download show';
+                    downloadObj.href = `/download/${fileBase}.obj`;
+                    downloadObj.download = `${fileBase}.obj`;
+                    downloadObj.className = 'btn-download show';
 
-                downloadGltf.href = `/download/${fileBase}.gltf`;
-                downloadGltf.download = `${fileBase}.gltf`;
-                downloadGltf.className = 'btn-download gltf show';
+                    downloadGltf.href = `/download/${fileBase}.gltf`;
+                    downloadGltf.download = `${fileBase}.gltf`;
+                    downloadGltf.className = 'btn-download gltf show';
 
-                downloadDxf.href = `/download/${fileBase}.dxf`;
-                downloadDxf.download = `${fileBase}.dxf`;
-                downloadDxf.className = 'btn-download dxf show';
+                    downloadDxf.href = `/download/${fileBase}.dxf`;
+                    downloadDxf.download = `${fileBase}.dxf`;
+                    downloadDxf.className = 'btn-download dxf show';
 
-                toggleRotateBtn.className = 'btn-toggle-rotate show';
-                cadToolbar.style.display = 'flex';
-                aiStatusTag.style.display = 'block';
+                    toggleRotateBtn.className = 'btn-toggle-rotate show';
+                    cadToolbar.style.display = 'flex';
+                    aiStatusTag.style.display = 'block';
 
-                btn.textContent = 'توليد التصميم المعماري وملفات الأوتوكاد 🧠🏗️';
-                btn.disabled = false;
-            }, 300);
+                    btn.textContent = 'توليد التصميم المعماري وملفات الأوتوكاد 🧠🏗️';
+                    btn.disabled = false;
+                }, 200);
+            });
         });
     </script>
 </body>
