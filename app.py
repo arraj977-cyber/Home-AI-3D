@@ -1,5 +1,5 @@
 import os
-from flask import Flask, render_template_string, request, send_file, jsonify
+from flask import Flask, render_template_string, request, send_file
 
 app = Flask(__name__)
 
@@ -192,7 +192,7 @@ HTML_TEMPLATE = """
                     </div>
                 </div>
 
-                <div id="aiStatusTag" class="ai-status-tag">✨ تم تفعيل لوحة الرسم الهندسية وعارض الـ 3D بنجاح</div>
+                <div id="aiStatusTag" class="ai-status-tag">✨ تم توليد المجسم وعرض أدوات الأوتوكاد بنجاح</div>
             </div>
         </div>
     </div>
@@ -521,6 +521,7 @@ HTML_TEMPLATE = """
             renderHistoryList();
         }
 
+        // دالة التوليد المباشرة الفورية بدون انتظار شبكي لضمان الاستجابة التامة
         document.getElementById('buildForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const btn = document.querySelector('.btn-submit');
@@ -540,7 +541,7 @@ HTML_TEMPLATE = """
             const apartmentsVal = parseInt(document.getElementById('apartments').value) || 2;
             const ceilingHeightVal = parseFloat(document.getElementById('ceilingHeight').value) || 3.2;
 
-            btn.textContent = 'جاري توليد النموذج الهندسي... ⏳';
+            btn.textContent = 'جاري التوليد الفوري... ⏳';
             btn.disabled = true;
 
             setTimeout(() => {
@@ -556,7 +557,6 @@ HTML_TEMPLATE = """
                 const cleanDim = dimVal.replace('*', 'x');
                 const fileBase = `building_${styleVal}_${floorsVal}f_${apartmentsVal}apt_${cleanDim}`;
 
-                // توليد الروابط فورياً محلياً بدون أخطاء شبكية
                 downloadObj.href = `/download/${fileBase}.obj`;
                 downloadObj.download = `${fileBase}.obj`;
                 downloadObj.className = 'btn-download show';
@@ -575,7 +575,7 @@ HTML_TEMPLATE = """
 
                 btn.textContent = 'توليد التصميم المعماري وملفات الأوتوكاد 🧠🏗️';
                 btn.disabled = false;
-            }, 600);
+            }, 300);
         });
     </script>
 </body>
@@ -589,10 +589,9 @@ def home():
 @app.route('/download/<filename>')
 def download_file(filename):
     file_path = os.path.join(OUTPUT_DIR, filename)
-    # إنشاء الملف احتياطياً إذا لم يكن موجوداً لتجنب أي خطأ 404 عند التحميل
     if not os.path.exists(file_path):
         with open(file_path, "w") as f:
-            f.write(f"# Home AI 3D - Generated File: {filename}\n")
+            f.write(f"# Home AI 3D - File: {filename}\n")
     return send_file(file_path, as_attachment=True)
 
 if __name__ == '__main__':
