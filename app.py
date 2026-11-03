@@ -12,8 +12,8 @@ HTML_TEMPLATE = """
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home AI 3D - المنصة الهندسية المتقدمة</title>
-    <!-- تضمين مكتبة Three.js من CDN موثوق -->
+    <title>Home AI 3D - المنصة الهندسية الواقعية للمباني</title>
+    <!-- تضمين مكتبة Three.js للعارض ثلاثي الأبعاد -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         :root {
@@ -91,7 +91,7 @@ HTML_TEMPLATE = """
         <header>
             <div class="logo-area">
                 <span class="logo-title">HOME AI <span>3D</span></span>
-                <span class="badge">المنصة الهندسية المتقدمة مع أدوات أوتوكاد 📐🏢</span>
+                <span class="badge">المنصة الهندسية الواقعية للمباني 📐🏢</span>
             </div>
         </header>
 
@@ -148,7 +148,7 @@ HTML_TEMPLATE = """
                                 <span>غروب</span>
                             </div>
                         </div>
-                        <button type="submit" class="btn-submit">توليد التصميم المعماري وملفات الأوتوكاد 🧠🏗️</button>
+                        <button type="submit" class="btn-submit">توليد المبنى الواقعي ثلاثي الأبعاد 🧠🏗️</button>
                     </form>
                 </div>
 
@@ -164,11 +164,11 @@ HTML_TEMPLATE = """
                 </div>
             </div>
 
-            <!-- العارض المعماري التفاعلي المتقدم -->
+            <!-- العارض المعماري الواقعي -->
             <div class="viewer-container">
                 <div class="viewer-header">
                     <div class="cad-toolbar" id="cadToolbar" style="display: none;">
-                        <button type="button" class="cad-btn active" id="mode3dBtn" onclick="switchMode('3d')">عرض 3D 🧊</button>
+                        <button type="button" class="cad-btn active" id="mode3dBtn" onclick="switchMode('3d')">عرض 3D واقعي 🧊</button>
                         <button type="button" class="cad-btn" id="modeDrawBtn" onclick="switchMode('draw')">رسم CAD ✏️</button>
                         <button type="button" class="cad-btn" id="clearDrawBtn" onclick="clearDrawings()" style="color: var(--danger-color);">مسح الرسم ❌</button>
                     </div>
@@ -184,15 +184,15 @@ HTML_TEMPLATE = """
                 <div class="viewer-views">
                     <div class="view-pane">
                         <div class="placeholder-3d" id="placeholder">
-                            <h3>جاهز لمعالجة الموقع المعماري!</h3>
-                            <p style="margin-top:8px;">حدد متطلباتك واضغط توليد لمشاهدة المجسم ثلاثي الأبعاد ولوحة الرسم الهندسية.</p>
+                            <h3>جاهز لتوليد المبنى الحقيقي ثلاثي الأبعاد!</h3>
+                            <p style="margin-top:8px;">حدد متطلباتك واضغط توليد لمشاهدة مجسم عالي التفاصيل والواقعية.</p>
                         </div>
                         <canvas id="canvas3d"></canvas>
                         <canvas id="cadCanvas2D"></canvas>
                     </div>
                 </div>
 
-                <div id="aiStatusTag" class="ai-status-tag">✨ تم توليد المجسم وعرض أدوات الأوتوكاد بنجاح</div>
+                <div id="aiStatusTag" class="ai-status-tag">✨ تم توليد المبنى الواقعي مع تفاصيل الواجهات والنوافذ بنجاح</div>
             </div>
         </div>
     </div>
@@ -331,7 +331,7 @@ HTML_TEMPLATE = """
         }
 
         function init3DViewer() {
-            const container = document.querySelector('.viewer-3d') || document.querySelector('.view-pane');
+            const container = document.querySelector('.view-pane');
             const canvas = document.getElementById('canvas3d');
             
             if (!scene) {
@@ -339,23 +339,23 @@ HTML_TEMPLATE = """
                 scene.background = new THREE.Color(0x090d16);
 
                 camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
-                camera.position.set(16, 14, 24);
+                camera.position.set(18, 16, 28);
                 camera.lookAt(0, 0, 0);
 
                 renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
                 renderer.setSize(container.clientWidth, container.clientHeight);
                 renderer.shadowMap.enabled = true;
 
-                const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+                const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
                 scene.add(ambientLight);
 
-                dirLight = new THREE.DirectionalLight(0xffffff, 1.4);
-                dirLight.position.set(20, 35, 20);
+                dirLight = new THREE.DirectionalLight(0xffffff, 1.5);
+                dirLight.position.set(25, 40, 25);
                 dirLight.castShadow = true;
                 scene.add(dirLight);
 
-                const gridHelper = new THREE.GridHelper(50, 50, 0x3b82f6, 0x243048);
-                gridHelper.position.y = -1;
+                const gridHelper = new THREE.GridHelper(60, 60, 0x3b82f6, 0x243048);
+                gridHelper.position.y = -1.2;
                 scene.add(gridHelper);
 
                 canvas.addEventListener('mousedown', (e) => { isDragging = true; previousMousePosition = { x: e.clientX, y: e.clientY }; });
@@ -372,28 +372,13 @@ HTML_TEMPLATE = """
                 canvas.addEventListener('wheel', (e) => {
                     e.preventDefault();
                     camera.position.z += e.deltaY * 0.03;
-                    camera.position.z = Math.max(5, Math.min(50, camera.position.z));
+                    camera.position.z = Math.max(6, Math.min(60, camera.position.z));
                 }, { passive: false });
-
-                canvas.addEventListener('click', (e) => {
-                    const rect = canvas.getBoundingClientRect();
-                    mouse.x = ((e.clientX - rect.left) / canvas.clientWidth) * 2 - 1;
-                    mouse.y = -((e.clientY - rect.top) / canvas.clientHeight) * 2 + 1;
-
-                    raycaster.setFromCamera(mouse, camera);
-                    if (buildingGroup) {
-                        const intersects = raycaster.intersectObjects(buildingGroup.children, true);
-                        if (intersects.length > 0) {
-                            const hitMesh = intersects[0].object;
-                            hitMesh.material.color.setHex(Math.random() * 0xffffff);
-                        }
-                    }
-                });
 
                 document.getElementById('sunAngle').addEventListener('input', (e) => {
                     const angle = (e.target.value * Math.PI) / 180;
-                    dirLight.position.x = Math.cos(angle) * 30;
-                    dirLight.position.z = Math.sin(angle) * 30;
+                    dirLight.position.x = Math.cos(angle) * 35;
+                    dirLight.position.z = Math.sin(angle) * 35;
                 });
 
                 animate();
@@ -403,69 +388,105 @@ HTML_TEMPLATE = """
         function animate() {
             requestAnimationFrame(animate);
             if (buildingGroup && isRotating && !isDragging && currentMode === '3d') {
-                buildingGroup.rotation.y += 0.002;
+                buildingGroup.rotation.y += 0.003;
             }
             if (renderer && scene && camera) {
                 renderer.render(scene, camera);
             }
         }
 
+        // دالة متطورة لتوليد مبنى حقيقي مفصل (واجهات، بلكونات، نوافذ، ومدخل)
         function generateDetailedBuilding(floors, dimensionsText, apartments, ceilingHeight) {
             if (buildingGroup) {
                 scene.remove(buildingGroup);
             }
             buildingGroup = new THREE.Group();
 
-            let widthScale = 4.8;
-            let depthScale = 3.6;
+            let widthScale = 5.2;
+            let depthScale = 4.0;
             if (dimensionsText) {
                 const parts = dimensionsText.split(/[\*xX×]/);
                 if (parts.length >= 2) {
                     const w = parseFloat(parts[0]);
                     const d = parseFloat(parts[1]);
                     if (!isNaN(w) && !isNaN(d)) {
-                        widthScale = Math.max(3.2, Math.min(7.0, w / 4.0));
-                        depthScale = Math.max(2.6, Math.min(5.8, d / 3.8));
+                        widthScale = Math.max(3.5, Math.min(8.0, w / 3.8));
+                        depthScale = Math.max(3.0, Math.min(6.5, d / 3.8));
                     }
                 }
             }
 
             const scaleH = parseFloat(ceilingHeight) || 3.2;
-            const hUnit = scaleH * 0.3;
+            const hUnit = scaleH * 0.32;
 
-            const concreteMat = new THREE.MeshStandardMaterial({ color: 0xcbd5e1, roughness: 0.2 });
-            const glassMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, roughness: 0.1, transparent: true, opacity: 0.55 });
-            const partitionMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.5 });
-            const balconyMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.4 });
+            // خامات واقعية للمبنى الحقيقي
+            const concreteMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.3 }); // الخرسانة
+            const wallMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.4 });       // الجدران البيضاء/الفاتحة
+            const glassMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, roughness: 0.1, transparent: true, opacity: 0.65 }); // الزجاج المعماري
+            const frameMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.2 });       // إطارات النوافذ والأبواب
+            const balconyMat = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.3 });    // درابزين البلكونات
 
             for (let i = 0; i < floors; i++) {
-                const slabGeo = new THREE.BoxGeometry(widthScale, 0.15, depthScale);
+                // سقف خرساني بارز لكل طابق
+                const slabGeo = new THREE.BoxGeometry(widthScale + 0.2, 0.12, depthScale + 0.2);
                 const slab = new THREE.Mesh(slabGeo, concreteMat.clone());
                 slab.position.y = i * hUnit;
                 buildingGroup.add(slab);
 
-                const floorBodyGeo = new THREE.BoxGeometry(widthScale * 0.92, hUnit * 0.75, depthScale * 0.92);
-                const floorBody = new THREE.Mesh(floorBodyGeo, partitionMat.clone());
+                // هيكل الطابق الأساسي
+                const floorBodyGeo = new THREE.BoxGeometry(widthScale, hUnit * 0.8, depthScale);
+                const floorBody = new THREE.Mesh(floorBodyGeo, wallMat.clone());
                 floorBody.position.y = i * hUnit + (hUnit * 0.4);
                 buildingGroup.add(floorBody);
 
+                // الطابق الأرضي: إضافة مدخل المبنى الرئيسي
+                if (i === 0) {
+                    const doorGeo = new THREE.BoxGeometry(1.0, 1.4, 0.1);
+                    const door = new THREE.Mesh(doorGeo, frameMat.clone());
+                    door.position.set(0, (hUnit * 0.4) - 0.3, (depthScale / 2) + 0.06);
+                    buildingGroup.add(door);
+                }
+
+                // الطوابق المتكررة: إضافة نوافذ وبلكونات واقعية موزعة حسب عدد الشقق
                 const apptsCount = parseInt(apartments) || 2;
-                const segmentWidth = (widthScale * 0.85) / apptsCount;
+                const segmentWidth = widthScale / apptsCount;
 
                 for (let a = 0; a < apptsCount; a++) {
-                    const xOffset = - (widthScale * 0.85 / 2) + (segmentWidth * a) + (segmentWidth / 2);
+                    const xOffset = - (widthScale / 2) + (segmentWidth * a) + (segmentWidth / 2);
 
-                    const glassGeo = new THREE.BoxGeometry(segmentWidth * 0.85, hUnit * 0.55, 0.08);
-                    const frontGlass = new THREE.Mesh(glassGeo, glassMat.clone());
-                    frontGlass.position.set(xOffset, i * hUnit + (hUnit * 0.4), depthScale / 2 + 0.04);
-                    buildingGroup.add(frontGlass);
+                    // نافذة زجاجية واسعة لكل شقة
+                    const windowGeo = new THREE.BoxGeometry(segmentWidth * 0.6, hUnit * 0.5, 0.06);
+                    const windowMesh = new THREE.Mesh(windowGeo, glassMat.clone());
+                    windowMesh.position.set(xOffset, i * hUnit + (hUnit * 0.45), (depthScale / 2) + 0.05);
+                    buildingGroup.add(windowMesh);
 
-                    const balconyGeo = new THREE.BoxGeometry(segmentWidth * 0.9, 0.08, 0.6);
-                    const balcony = new THREE.Mesh(balconyGeo, balconyMat.clone());
-                    balcony.position.set(xOffset, i * hUnit + (hUnit * 0.18), depthScale / 2 + 0.3);
-                    buildingGroup.add(balcony);
+                    // إطار النافذة الأسود المعماري
+                    const frameGeo = new THREE.BoxGeometry(segmentWidth * 0.64, hUnit * 0.52, 0.03);
+                    const frameMesh = new THREE.Mesh(frameGeo, frameMat.clone());
+                    frameMesh.position.set(xOffset, i * hUnit + (hUnit * 0.45), (depthScale / 2) + 0.03);
+                    buildingGroup.add(frameMesh);
+
+                    // بلكونة طابقية (تظهر من الطابق الأول فصاعداً)
+                    if (i > 0) {
+                        const balconyBaseGeo = new THREE.BoxGeometry(segmentWidth * 0.85, 0.08, 0.7);
+                        const balconyBase = new THREE.Mesh(balconyBaseGeo, concreteMat.clone());
+                        balconyBase.position.set(xOffset, i * hUnit + (hUnit * 0.2), (depthScale / 2) + 0.35);
+                        buildingGroup.add(balconyBase);
+
+                        // درابزين البلكونة الزجاجي/المعدني
+                        const railingGeo = new THREE.BoxGeometry(segmentWidth * 0.85, 0.45, 0.04);
+                        const railing = new THREE.Mesh(railingGeo, balconyMat.clone());
+                        railing.position.set(xOffset, i * hUnit + (hUnit * 0.45), (depthScale / 2) + 0.68);
+                        buildingGroup.add(railing);
+                    }
                 }
             }
+
+            // برج السطح (Roof Penthouse / Staircase Housing)
+            const roofGeo = new THREE.BoxGeometry(widthScale * 0.35, hUnit * 0.6, depthScale * 0.35);
+            const roofMesh = new THREE.Mesh(roofGeo, wallMat.clone());
+            roofMesh.position.set(0, floors * hUnit + (hUnit * 0.3), 0);
+            buildingGroup.add(roofMesh);
 
             scene.add(buildingGroup);
         }
@@ -525,7 +546,7 @@ HTML_TEMPLATE = """
             renderHistoryList();
         }
 
-        // تشغيل الحدث فوراً دون أي انتظار شبكي عقيم
+        // تشغيل الحدث عند توليد المبنى الحقيقي
         document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('buildForm').addEventListener('submit', function(e) {
                 e.preventDefault();
@@ -546,7 +567,7 @@ HTML_TEMPLATE = """
                 const apartmentsVal = parseInt(document.getElementById('apartments').value) || 2;
                 const ceilingHeightVal = parseFloat(document.getElementById('ceilingHeight').value) || 3.2;
 
-                btn.textContent = 'جاري التوليد... ⏳';
+                btn.textContent = 'جاري هندسة المبنى الحقيقي... ⏳';
                 btn.disabled = true;
 
                 setTimeout(() => {
@@ -576,7 +597,7 @@ HTML_TEMPLATE = """
                     cadToolbar.style.display = 'flex';
                     aiStatusTag.style.display = 'block';
 
-                    btn.textContent = 'توليد التصميم المعماري وملفات الأوتوكاد 🧠🏗️';
+                    btn.textContent = 'توليد المبنى الواقعي ثلاثي الأبعاد 🧠🏗️';
                     btn.disabled = false;
                 }, 200);
             });
