@@ -12,7 +12,7 @@ HTML_TEMPLATE = """
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home AI 3D - المنصة الهندسية الواقعية للمباني</title>
+    <title>Home AI 3D - المنصة الهندسية الواقعية المتقدمة</title>
     <!-- تضمين مكتبة Three.js للعارض ثلاثي الأبعاد -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
@@ -133,11 +133,11 @@ HTML_TEMPLATE = """
                         <div class="form-group">
                             <label for="style">طراز العمارة والتشطيب</label>
                             <select id="style">
-                                <option value="modern">✨ عمارة مودرن مع واجهات زجاجية</option>
+                                <option value="modern">✨ عمارة مودرن (زجاج واسع وإضاءة)</option>
                                 <option value="full_house">🏠 مبنى سكني متكامل (Dual Apartments)</option>
-                                <option value="classic">🏛️ كلاسيكي فاخر بأعمدة</option>
-                                <option value="scandi">🌿 اسكندنافي هادئ</option>
-                                <option value="industrial">🏭 صناعي معاصر</option>
+                                <option value="classic">🏛️ كلاسيكي فاخر (أعمدة حجرية وتفاصيل)</option>
+                                <option value="scandi">🌿 اسكندنافي هادئ (أخشاب وكتل نظيفة)</option>
+                                <option value="industrial">🏭 صناعي معاصر (طوب مظلم ومعادن)</option>
                             </select>
                         </div>
                         <div class="form-group">
@@ -185,14 +185,14 @@ HTML_TEMPLATE = """
                     <div class="view-pane">
                         <div class="placeholder-3d" id="placeholder">
                             <h3>جاهز لتوليد المبنى الحقيقي ثلاثي الأبعاد!</h3>
-                            <p style="margin-top:8px;">حدد متطلباتك واضغط توليد لمشاهدة مجسم عالي التفاصيل والواقعية.</p>
+                            <p style="margin-top:8px;">اختر طراز العمارة واضغط توليد لمشاهدة تفاصيل المبنى الواقعية.</p>
                         </div>
                         <canvas id="canvas3d"></canvas>
                         <canvas id="cadCanvas2D"></canvas>
                     </div>
                 </div>
 
-                <div id="aiStatusTag" class="ai-status-tag">✨ تم توليد المبنى الواقعي مع تفاصيل الواجهات والنوافذ بنجاح</div>
+                <div id="aiStatusTag" class="ai-status-tag">✨ تم تطبيق الطراز المعماري وتوليد الواجهات الواقعية بنجاح</div>
             </div>
         </div>
     </div>
@@ -346,10 +346,10 @@ HTML_TEMPLATE = """
                 renderer.setSize(container.clientWidth, container.clientHeight);
                 renderer.shadowMap.enabled = true;
 
-                const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+                const ambientLight = new THREE.AmbientLight(0xffffff, 0.85);
                 scene.add(ambientLight);
 
-                dirLight = new THREE.DirectionalLight(0xffffff, 1.5);
+                dirLight = new THREE.DirectionalLight(0xffffff, 1.6);
                 dirLight.position.set(25, 40, 25);
                 dirLight.castShadow = true;
                 scene.add(dirLight);
@@ -395,8 +395,8 @@ HTML_TEMPLATE = """
             }
         }
 
-        // دالة متطورة لتوليد مبنى حقيقي مفصل (واجهات، بلكونات، نوافذ، ومدخل)
-        function generateDetailedBuilding(floors, dimensionsText, apartments, ceilingHeight) {
+        // توليد المبنى الواقعي متجاوباً كلياً مع الطراز المعماري المختار
+        function generateDetailedBuilding(floors, dimensionsText, apartments, ceilingHeight, style) {
             if (buildingGroup) {
                 scene.remove(buildingGroup);
             }
@@ -419,72 +419,110 @@ HTML_TEMPLATE = """
             const scaleH = parseFloat(ceilingHeight) || 3.2;
             const hUnit = scaleH * 0.32;
 
-            // خامات واقعية للمبنى الحقيقي
-            const concreteMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.3 }); // الخرسانة
-            const wallMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.4 });       // الجدران البيضاء/الفاتحة
-            const glassMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, roughness: 0.1, transparent: true, opacity: 0.65 }); // الزجاج المعماري
-            const frameMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.2 });       // إطارات النوافذ والأبواب
-            const balconyMat = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.3 });    // درابزين البلكونات
+            // تحديد الخامات والألوان بناءً على الطراز المعماري المختار
+            let wallColor = 0xe2e8f0;
+            let glassColor = 0x38bdf8;
+            let frameColor = 0x1e293b;
+            let slabColor = 0x94a3b8;
+            let accentColor = 0x0f172a;
+
+            if (style === 'classic') {
+                wallColor = 0xf1f5f9; // حجر كلاسيكي فاتح
+                glassColor = 0x60a5fa;
+                frameColor = 0xb45309; // إطارات ذهبية/خشبية فاخرة
+                slabColor = 0xd1d5db;
+                accentColor = 0x92400e;
+            } else if (style === 'industrial') {
+                wallColor = 0x334155; // طوب معاصر غامق
+                glassColor = 0x93c5fd;
+                frameColor = 0x0f172a;
+                slabColor = 0x1e293b;
+                accentColor = 0x475569;
+            } else if (style === 'scandi') {
+                wallColor = 0xf8fafc; // أبيض ناصع مع أخشاب هادئة
+                glassColor = 0x7dd3fc;
+                frameColor = 0x78350f; // تفاصيل خشبية طبيعية
+                slabColor = 0xe2e8f0;
+                accentColor = 0xd97706;
+            } else if (style === 'full_house') {
+                wallColor = 0xcfd8dc;
+                glassColor = 0x29b6f6;
+                frameColor = 0x37474f;
+                slabColor = 0x90a4ae;
+                accentColor = 0x455a64;
+            }
+
+            const wallMat = new THREE.MeshStandardMaterial({ color: wallColor, roughness: 0.4 });
+            const glassMat = new THREE.MeshStandardMaterial({ color: glassColor, roughness: 0.1, transparent: true, opacity: 0.7 });
+            const frameMat = new THREE.MeshStandardMaterial({ color: frameColor, roughness: 0.2 });
+            const slabMat = new THREE.MeshStandardMaterial({ color: slabColor, roughness: 0.3 });
+            const accentMat = new THREE.MeshStandardMaterial({ color: accentColor, roughness: 0.3 });
 
             for (let i = 0; i < floors; i++) {
-                // سقف خرساني بارز لكل طابق
-                const slabGeo = new THREE.BoxGeometry(widthScale + 0.2, 0.12, depthScale + 0.2);
-                const slab = new THREE.Mesh(slabGeo, concreteMat.clone());
+                // سقف فاخر بارز بين الطوابق
+                const slabGeo = new THREE.BoxGeometry(widthScale + 0.25, 0.14, depthScale + 0.25);
+                const slab = new THREE.Mesh(slabGeo, slabMat.clone());
                 slab.position.y = i * hUnit;
                 buildingGroup.add(slab);
 
-                // هيكل الطابق الأساسي
-                const floorBodyGeo = new THREE.BoxGeometry(widthScale, hUnit * 0.8, depthScale);
+                // الهيكل الأساسي للطابق
+                const floorBodyGeo = new THREE.BoxGeometry(widthScale, hUnit * 0.78, depthScale);
                 const floorBody = new THREE.Mesh(floorBodyGeo, wallMat.clone());
-                floorBody.position.y = i * hUnit + (hUnit * 0.4);
+                floorBody.position.y = i * hUnit + (hUnit * 0.39);
                 buildingGroup.add(floorBody);
 
-                // الطابق الأرضي: إضافة مدخل المبنى الرئيسي
+                // الطابق الأرضي: مدخل المبنى الرئيسي الفخم
                 if (i === 0) {
-                    const doorGeo = new THREE.BoxGeometry(1.0, 1.4, 0.1);
-                    const door = new THREE.Mesh(doorGeo, frameMat.clone());
-                    door.position.set(0, (hUnit * 0.4) - 0.3, (depthScale / 2) + 0.06);
-                    buildingGroup.add(door);
+                    const entranceGeo = new THREE.BoxGeometry(1.4, hUnit * 0.65, 0.15);
+                    const entrance = new THREE.Mesh(entranceGeo, accentMat.clone());
+                    entrance.position.set(0, (hUnit * 0.35) - 0.1, (depthScale / 2) + 0.05);
+                    buildingGroup.add(entrance);
+
+                    // مظلة المدخل
+                    const canopyGeo = new THREE.BoxGeometry(2.0, 0.1, 0.8);
+                    const canopy = new THREE.Mesh(canopyGeo, frameMat.clone());
+                    canopy.position.set(0, (hUnit * 0.7), (depthScale / 2) + 0.3);
+                    buildingGroup.add(canopy);
                 }
 
-                // الطوابق المتكررة: إضافة نوافذ وبلكونات واقعية موزعة حسب عدد الشقق
+                // توزيع الشقق والنوافذ الواقعية
                 const apptsCount = parseInt(apartments) || 2;
                 const segmentWidth = widthScale / apptsCount;
 
                 for (let a = 0; a < apptsCount; a++) {
                     const xOffset = - (widthScale / 2) + (segmentWidth * a) + (segmentWidth / 2);
 
-                    // نافذة زجاجية واسعة لكل شقة
-                    const windowGeo = new THREE.BoxGeometry(segmentWidth * 0.6, hUnit * 0.5, 0.06);
+                    // نافذة زجاجية واسعة واقعية
+                    const windowGeo = new THREE.BoxGeometry(segmentWidth * 0.65, hUnit * 0.5, 0.06);
                     const windowMesh = new THREE.Mesh(windowGeo, glassMat.clone());
-                    windowMesh.position.set(xOffset, i * hUnit + (hUnit * 0.45), (depthScale / 2) + 0.05);
+                    windowMesh.position.set(xOffset, i * hUnit + (hUnit * 0.42), (depthScale / 2) + 0.05);
                     buildingGroup.add(windowMesh);
 
-                    // إطار النافذة الأسود المعماري
-                    const frameGeo = new THREE.BoxGeometry(segmentWidth * 0.64, hUnit * 0.52, 0.03);
+                    // إطار النافذة المعماري
+                    const frameGeo = new THREE.BoxGeometry(segmentWidth * 0.7, hUnit * 0.54, 0.03);
                     const frameMesh = new THREE.Mesh(frameGeo, frameMat.clone());
-                    frameMesh.position.set(xOffset, i * hUnit + (hUnit * 0.45), (depthScale / 2) + 0.03);
+                    frameMesh.position.set(xOffset, i * hUnit + (hUnit * 0.42), (depthScale / 2) + 0.03);
                     buildingGroup.add(frameMesh);
 
-                    // بلكونة طابقية (تظهر من الطابق الأول فصاعداً)
+                    // بلكونة طابقية واقعية للطوابق العليا
                     if (i > 0) {
-                        const balconyBaseGeo = new THREE.BoxGeometry(segmentWidth * 0.85, 0.08, 0.7);
-                        const balconyBase = new THREE.Mesh(balconyBaseGeo, concreteMat.clone());
-                        balconyBase.position.set(xOffset, i * hUnit + (hUnit * 0.2), (depthScale / 2) + 0.35);
+                        const balconyBaseGeo = new THREE.BoxGeometry(segmentWidth * 0.85, 0.08, 0.75);
+                        const balconyBase = new THREE.Mesh(balconyBaseGeo, slabMat.clone());
+                        balconyBase.position.set(xOffset, i * hUnit + (hUnit * 0.18), (depthScale / 2) + 0.38);
                         buildingGroup.add(balconyBase);
 
-                        // درابزين البلكونة الزجاجي/المعدني
-                        const railingGeo = new THREE.BoxGeometry(segmentWidth * 0.85, 0.45, 0.04);
-                        const railing = new THREE.Mesh(railingGeo, balconyMat.clone());
-                        railing.position.set(xOffset, i * hUnit + (hUnit * 0.45), (depthScale / 2) + 0.68);
+                        // درابزين البلكونة المعماري
+                        const railingGeo = new THREE.BoxGeometry(segmentWidth * 0.85, 0.4, 0.04);
+                        const railing = new THREE.Mesh(railingGeo, frameMat.clone());
+                        railing.position.set(xOffset, i * hUnit + (hUnit * 0.42), (depthScale / 2) + 0.72);
                         buildingGroup.add(railing);
                     }
                 }
             }
 
-            // برج السطح (Roof Penthouse / Staircase Housing)
-            const roofGeo = new THREE.BoxGeometry(widthScale * 0.35, hUnit * 0.6, depthScale * 0.35);
-            const roofMesh = new THREE.Mesh(roofGeo, wallMat.clone());
+            // تصميم السطح والبنتاوس (Roof Penthouse)
+            const roofGeo = new THREE.BoxGeometry(widthScale * 0.4, hUnit * 0.6, depthScale * 0.4);
+            const roofMesh = new THREE.Mesh(roofGeo, accentMat.clone());
             roofMesh.position.set(0, floors * hUnit + (hUnit * 0.3), 0);
             buildingGroup.add(roofMesh);
 
@@ -511,7 +549,7 @@ HTML_TEMPLATE = """
                     document.getElementById('apartments').value = p.apartments;
                     document.getElementById('ceilingHeight').value = p.ceilingHeight;
                     document.getElementById('style').value = p.style;
-                    generateDetailedBuilding(p.floors, p.dim, p.apartments, p.ceilingHeight);
+                    generateDetailedBuilding(p.floors, p.dim, p.apartments, p.ceilingHeight, p.style);
                 };
 
                 const delBtn = document.createElement('button');
@@ -546,7 +584,7 @@ HTML_TEMPLATE = """
             renderHistoryList();
         }
 
-        // تشغيل الحدث عند توليد المبنى الحقيقي
+        // ربط الزر بالاستجابة الفورية وتمرير الطراز المعماري المختار
         document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('buildForm').addEventListener('submit', function(e) {
                 e.preventDefault();
@@ -567,7 +605,7 @@ HTML_TEMPLATE = """
                 const apartmentsVal = parseInt(document.getElementById('apartments').value) || 2;
                 const ceilingHeightVal = parseFloat(document.getElementById('ceilingHeight').value) || 3.2;
 
-                btn.textContent = 'جاري هندسة المبنى الحقيقي... ⏳';
+                btn.textContent = 'جاري هندسة وتطبيق الطراز... ⏳';
                 btn.disabled = true;
 
                 setTimeout(() => {
@@ -575,7 +613,7 @@ HTML_TEMPLATE = """
                     canvas.style.display = 'block';
 
                     init3DViewer();
-                    generateDetailedBuilding(floorsVal, dimVal, apartmentsVal, ceilingHeightVal);
+                    generateDetailedBuilding(floorsVal, dimVal, apartmentsVal, ceilingHeightVal, styleVal);
                     addToHistory(descVal, dimVal, floorsVal, apartmentsVal, ceilingHeightVal, styleVal);
 
                     const cleanDim = dimVal.replace('*', 'x');
